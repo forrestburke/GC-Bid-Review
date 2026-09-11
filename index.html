@@ -1,0 +1,912 @@
+<title>Treasure Drive Bid Compare</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+
+  :root{
+    --bg:#f2f1ec;
+    --paper:#fbfaf7;
+    --ink:#1c2430;
+    --muted:#5c6472;
+    --faint:#8b909b;
+    --line:#dcdad0;
+    --line-strong:#c7c4b7;
+    --accent:#a8592f;
+    --accent-ink:#ffffff;
+    --accent-soft:#f1e1d4;
+    --good:#2e7d55;
+    --good-soft:#e2efe7;
+    --warn:#a8760f;
+    --warn-soft:#f5ead0;
+    --crit:#b1362a;
+    --crit-soft:#f6e0dc;
+    --seguro:#3c5a72;
+    --seguro-soft:#dfe7ec;
+    --mapleleaf:#7a5230;
+    --mapleleaf-soft:#ece1d3;
+    --shadow: 0 1px 2px rgba(28,36,48,0.06), 0 6px 20px -8px rgba(28,36,48,0.12);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#14171b;
+      --paper:#1b1f24;
+      --ink:#e9e7e0;
+      --muted:#a3a9b3;
+      --faint:#767d88;
+      --line:#2b2f35;
+      --line-strong:#3a3f47;
+      --accent:#d38257;
+      --accent-ink:#1b120b;
+      --accent-soft:#3a2a1e;
+      --good:#5cb98a;
+      --good-soft:#1c2f26;
+      --warn:#d1a13a;
+      --warn-soft:#332a12;
+      --crit:#e08074;
+      --crit-soft:#3a1f1c;
+      --seguro:#8fb3cc;
+      --seguro-soft:#232d34;
+      --mapleleaf:#cba374;
+      --mapleleaf-soft:#2f271c;
+      --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 8px 24px -8px rgba(0,0,0,0.5);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#14171b;
+    --paper:#1b1f24;
+    --ink:#e9e7e0;
+    --muted:#a3a9b3;
+    --faint:#767d88;
+    --line:#2b2f35;
+    --line-strong:#3a3f47;
+    --accent:#d38257;
+    --accent-ink:#1b120b;
+    --accent-soft:#3a2a1e;
+    --good:#5cb98a;
+    --good-soft:#1c2f26;
+    --warn:#d1a13a;
+    --warn-soft:#332a12;
+    --crit:#e08074;
+    --crit-soft:#3a1f1c;
+    --seguro:#8fb3cc;
+    --seguro-soft:#232d34;
+    --mapleleaf:#cba374;
+    --mapleleaf-soft:#2f271c;
+    --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 8px 24px -8px rgba(0,0,0,0.5);
+  }
+
+  *{box-sizing:border-box;}
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:'IBM Plex Sans',system-ui,sans-serif;
+    line-height:1.45;
+  }
+  .wrap{max-width:1180px;margin:0 auto;padding:28px 20px 80px;}
+  .num{font-family:'IBM Plex Mono',ui-monospace,monospace;font-variant-numeric:tabular-nums;}
+  code.tag{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--faint);background:var(--paper);border:1px solid var(--line);padding:1px 5px;border-radius:3px;letter-spacing:.02em;}
+
+  /* header */
+  header.top{display:flex;justify-content:space-between;align-items:flex-end;gap:24px;flex-wrap:wrap;margin-bottom:22px;border-bottom:2px solid var(--ink);padding-bottom:16px;}
+  header.top h1{font-size:26px;font-weight:700;margin:0 0 4px;letter-spacing:-0.01em;}
+  header.top .sub{color:var(--muted);font-size:13.5px;max-width:56ch;}
+  header.top .meta{text-align:right;font-size:12px;color:var(--faint);}
+  header.top .meta strong{color:var(--ink);}
+
+  nav.tabs{display:flex;gap:6px;margin-bottom:24px;flex-wrap:wrap;border-bottom:1px solid var(--line);}
+  nav.tabs button{
+    font-family:inherit;font-size:13.5px;font-weight:600;color:var(--muted);
+    background:none;border:none;padding:10px 16px;cursor:pointer;border-bottom:2px solid transparent;
+    margin-bottom:-1px;
+  }
+  nav.tabs button:hover{color:var(--ink);}
+  nav.tabs button.active{color:var(--accent);border-bottom-color:var(--accent);}
+
+  section.view{display:none;}
+  section.view.active{display:block;}
+
+  .prop-head{margin-bottom:20px;}
+  .prop-head h2{font-size:20px;margin:0 0 3px;}
+  .prop-head .addr{color:var(--muted);font-size:13px;}
+  .prop-head .scope{font-size:12.5px;color:var(--faint);margin-top:6px;max-width:70ch;}
+
+  /* stat tiles */
+  .tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;margin-bottom:22px;}
+  .tile{background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:14px 16px;box-shadow:var(--shadow);}
+  .tile .label{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--faint);font-weight:600;margin-bottom:6px;display:flex;align-items:center;gap:6px;}
+  .tile .dot{width:8px;height:8px;border-radius:50%;display:inline-block;}
+  .tile .value{font-size:22px;font-weight:600;font-family:'IBM Plex Mono',monospace;letter-spacing:-0.01em;}
+  .tile .value small{font-size:12px;color:var(--faint);font-family:'IBM Plex Sans',sans-serif;font-weight:400;}
+  .tile .foot{font-size:11.5px;color:var(--muted);margin-top:4px;}
+  .tile.delta .value.pos{color:var(--crit);}
+  .tile.delta .value.neg{color:var(--good);}
+
+  /* sqft box */
+  .sqft-box{display:flex;align-items:center;gap:10px;background:var(--paper);border:1px dashed var(--line-strong);border-radius:10px;padding:10px 14px;margin-bottom:20px;font-size:13px;flex-wrap:wrap;}
+  .sqft-box input{width:90px;font-family:'IBM Plex Mono',monospace;font-size:13px;padding:4px 8px;border:1px solid var(--line-strong);border-radius:6px;background:var(--bg);color:var(--ink);}
+  .sqft-box .out{font-family:'IBM Plex Mono',monospace;color:var(--ink);}
+  .sqft-box .out b{color:var(--accent);}
+
+  /* category comparison */
+  .catable{width:100%;border-collapse:collapse;margin-bottom:26px;}
+  .catable th{text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--faint);font-weight:600;padding:0 0 8px;border-bottom:1px solid var(--line);}
+  .catable th.num,.catable td.num{text-align:right;}
+  .catrow td{padding:9px 0;border-bottom:1px solid var(--line);vertical-align:top;}
+  .catrow .catname{font-weight:600;font-size:13.5px;padding-right:14px;width:190px;}
+  .catrow .catname code{display:block;font-size:10.5px;color:var(--faint);font-weight:400;margin-top:1px;}
+  .catrow td.num{font-family:'IBM Plex Mono',monospace;font-size:13px;font-variant-numeric:tabular-nums;white-space:nowrap;width:110px;}
+  .catrow td.num.zero{color:var(--faint);}
+  .bars{padding:9px 14px 9px 4px;}
+  .barline{display:flex;align-items:center;gap:8px;margin-bottom:4px;}
+  .barline:last-child{margin-bottom:0;}
+  .barline .who{width:64px;flex:none;font-size:10.5px;color:var(--faint);text-align:right;font-weight:600;}
+  .barline .track{flex:1;background:var(--bg);border-radius:4px;height:9px;overflow:hidden;}
+  .barline .fill{height:100%;border-radius:4px;}
+  .fill.seguro{background:var(--seguro);}
+  .fill.mapleleaf{background:var(--mapleleaf);}
+  tr.totalrow td{border-top:2px solid var(--ink);border-bottom:none;padding-top:12px;font-weight:700;font-size:14.5px;}
+  tr.flagrow td{padding-top:2px;padding-bottom:14px;border-bottom:1px solid var(--line);}
+  .inline-flag{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;padding:2px 8px;border-radius:20px;margin-top:2px;}
+  .inline-flag.warn{background:var(--warn-soft);color:var(--warn);}
+  .inline-flag.crit{background:var(--crit-soft);color:var(--crit);}
+
+  .legend{display:flex;gap:16px;font-size:12px;color:var(--muted);margin:-8px 0 16px;flex-wrap:wrap;}
+  .legend span{display:inline-flex;align-items:center;gap:6px;}
+  .legend i{width:10px;height:10px;border-radius:3px;display:inline-block;}
+
+  /* flags */
+  h3.section-title{font-size:15px;font-weight:700;margin:30px 0 12px;display:flex;align-items:center;gap:8px;}
+  h3.section-title .n{font-family:'IBM Plex Mono',monospace;font-size:11px;background:var(--ink);color:var(--bg);border-radius:20px;padding:2px 8px;font-weight:600;}
+  .flags{display:flex;flex-direction:column;gap:10px;margin-bottom:10px;}
+  .flag{background:var(--paper);border:1px solid var(--line);border-left:4px solid var(--faint);border-radius:8px;padding:12px 14px;box-shadow:var(--shadow);}
+  .flag.crit{border-left-color:var(--crit);}
+  .flag.warn{border-left-color:var(--warn);}
+  .flag.info{border-left-color:var(--seguro);}
+  .flag .ftitle{font-weight:700;font-size:13.5px;margin-bottom:3px;display:flex;align-items:center;gap:8px;}
+  .flag .fbadge{font-size:10px;text-transform:uppercase;letter-spacing:.05em;font-weight:700;padding:1px 7px;border-radius:20px;}
+  .flag.crit .fbadge{background:var(--crit-soft);color:var(--crit);}
+  .flag.warn .fbadge{background:var(--warn-soft);color:var(--warn);}
+  .flag.info .fbadge{background:var(--seguro-soft);color:var(--seguro);}
+  .flag .fbody{font-size:13px;color:var(--muted);}
+  .flag .fbody b{color:var(--ink);}
+
+  /* benchmarks */
+  .bench{width:100%;border-collapse:collapse;font-size:13px;margin-bottom:10px;}
+  .bench th{text-align:left;font-size:11px;text-transform:uppercase;color:var(--faint);letter-spacing:.05em;padding:0 10px 8px 0;border-bottom:1px solid var(--line);}
+  .bench td{padding:9px 10px 9px 0;border-bottom:1px solid var(--line);vertical-align:top;}
+  .bench td.range{font-family:'IBM Plex Mono',monospace;white-space:nowrap;color:var(--ink);font-weight:600;}
+  .bench td.note{color:var(--muted);font-size:12.5px;}
+  .disclaimer{font-size:12px;color:var(--faint);background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:10px 14px;margin-top:4px;}
+
+  /* add estimate / manage */
+  .panel{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:18px 20px;box-shadow:var(--shadow);margin-bottom:20px;}
+  .panel h3{margin:0 0 4px;font-size:15px;}
+  .panel .hint{font-size:12.5px;color:var(--muted);margin-bottom:14px;}
+  details.add summary{cursor:pointer;font-weight:700;font-size:14px;list-style:none;display:flex;align-items:center;gap:8px;}
+  details.add summary::-webkit-details-marker{display:none;}
+  details.add summary:before{content:'+';display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;background:var(--accent);color:var(--accent-ink);border-radius:6px;font-weight:700;font-size:14px;flex:none;}
+  details.add[open] summary:before{content:'–';}
+  .formgrid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin:16px 0 10px;}
+  .formgrid label{font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--faint);font-weight:600;display:block;margin-bottom:4px;}
+  .formgrid input,.formgrid select{width:100%;font-family:inherit;font-size:13px;padding:7px 9px;border:1px solid var(--line-strong);border-radius:7px;background:var(--bg);color:var(--ink);}
+  .lineitems{display:flex;flex-direction:column;gap:8px;margin:10px 0;}
+  .lineitem{display:grid;grid-template-columns:170px 1fr 120px 30px;gap:8px;align-items:center;}
+  .lineitem select,.lineitem input{font-family:inherit;font-size:12.5px;padding:6px 8px;border:1px solid var(--line-strong);border-radius:6px;background:var(--bg);color:var(--ink);}
+  .lineitem input.amt{font-family:'IBM Plex Mono',monospace;text-align:right;}
+  .lineitem button.rm{background:none;border:1px solid var(--line-strong);color:var(--faint);border-radius:6px;height:28px;cursor:pointer;}
+  .lineitem button.rm:hover{color:var(--crit);border-color:var(--crit);}
+  .btnrow{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;}
+  button.btn{font-family:inherit;font-size:12.5px;font-weight:600;padding:8px 14px;border-radius:7px;border:1px solid var(--line-strong);background:var(--bg);color:var(--ink);cursor:pointer;}
+  button.btn:hover{border-color:var(--ink);}
+  button.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);}
+  button.btn.primary:hover{opacity:.9;}
+  .formfoot{font-size:12px;color:var(--faint);margin-top:8px;}
+  .saved-ok{font-size:12.5px;color:var(--good);font-weight:600;margin-top:8px;display:none;}
+
+  /* estimate registry */
+  table.registry{width:100%;border-collapse:collapse;font-size:12.5px;}
+  table.registry th{text-align:left;font-size:10.5px;text-transform:uppercase;color:var(--faint);letter-spacing:.05em;padding:0 10px 7px 0;border-bottom:1px solid var(--line);}
+  table.registry td{padding:8px 10px 8px 0;border-bottom:1px solid var(--line);}
+  table.registry td.num{font-family:'IBM Plex Mono',monospace;text-align:right;}
+  .src-pill{font-size:10px;font-weight:700;text-transform:uppercase;padding:1px 6px;border-radius:20px;background:var(--seguro-soft);color:var(--seguro);}
+  .src-pill.added{background:var(--good-soft);color:var(--good);}
+  button.del{background:none;border:none;color:var(--faint);cursor:pointer;font-size:12px;}
+  button.del:hover{color:var(--crit);}
+
+  /* expandable line-item detail + flagging */
+  button.expandbtn{background:none;border:1px solid var(--line-strong);color:var(--muted);border-radius:6px;width:24px;height:24px;cursor:pointer;font-size:11px;line-height:1;}
+  button.expandbtn:hover{border-color:var(--ink);color:var(--ink);}
+  tr.detailrow td{border-bottom:1px solid var(--line);padding:4px 0 14px;background:var(--paper);}
+  .itemcols{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px;padding:10px 14px;}
+  .itemcol-head{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px;}
+  .itemrow{display:flex;align-items:flex-start;gap:8px;padding:6px 0;border-bottom:1px dashed var(--line);}
+  .itemrow.empty{color:var(--faint);font-size:12.5px;font-style:italic;border-bottom:none;}
+  .itemrow .itxt{flex:1;min-width:0;}
+  .itemrow .ilabel{font-size:12.5px;line-height:1.35;}
+  .itemrow .ilabel.strike{text-decoration:line-through;color:var(--faint);}
+  .itemrow .inote{font-size:11.5px;color:var(--muted);margin-top:3px;}
+  .itemrow .iamt{font-size:12px;color:var(--muted);flex:none;padding-top:1px;}
+  button.flagbtn{background:none;border:none;cursor:pointer;font-size:13px;opacity:.35;flex:none;padding:0 0 0 2px;}
+  button.flagbtn:hover{opacity:1;}
+  .itemrow.flagged button.flagbtn{opacity:1;}
+  button.linklike{background:none;border:none;color:var(--accent);font-size:11px;cursor:pointer;padding:0;text-decoration:underline;}
+  .flagform{background:var(--bg);border:1px solid var(--line-strong);border-radius:8px;padding:10px;margin:4px 0 10px;}
+  .flagform textarea{width:100%;min-height:56px;font-family:inherit;font-size:12.5px;padding:7px 9px;border:1px solid var(--line-strong);border-radius:6px;background:var(--paper);color:var(--ink);resize:vertical;}
+  .flagform .fexclude{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);margin:8px 0 2px;}
+
+  footer{margin-top:40px;padding-top:16px;border-top:1px solid var(--line);font-size:11.5px;color:var(--faint);}
+  @media (max-width:640px){
+    .formgrid{grid-template-columns:1fr;}
+    .lineitem{grid-template-columns:1fr;}
+    .catrow .catname{width:auto;}
+  }
+</style>
+
+<div class="wrap">
+
+  <header class="top">
+    <div>
+      <h1>Treasure Drive Bid Compare</h1>
+      <div class="sub">Contractor estimates for the 2535 &amp; 2537 Treasure Dr duplex renovation and the new backyard ADU, Santa Barbara CA — categorized, cross-checked, and flagged for redundant or inconsistent charges.</div>
+    </div>
+    <div class="meta">
+      <div><strong id="estCount">–</strong> estimates loaded</div>
+      <div>Scope: kitchen · bath · garage · ADU</div>
+    </div>
+  </header>
+
+  <nav class="tabs" id="tabs"></nav>
+
+  <div id="views"></div>
+
+  <footer>
+    Figures are transcribed from the scope/budget PDFs supplied by Seguro Construction (Lic. 909481) and Maple Leaf Construction (CLN 960826), dated Sept 9–10, 2026. Santa Barbara market ranges in the Benchmarks tab are general industry guidance, not quotes — confirm against 2–3 current local bids before relying on them for negotiation. Click ▸ on any category row to see its individual line items and flag one with 🚩 — flags and added estimates are stored with this page and visible to everyone who opens the link.
+  </footer>
+</div>
+
+<script>
+(function(){
+
+// ---------------------------------------------------------------------
+// Canonical category taxonomy (order = display order)
+// ---------------------------------------------------------------------
+const CATS = [
+  {key:'general',   label:'General Conditions',        code:'01500'},
+  {key:'site',       label:'Site Work / Grading',        code:'31000'},
+  {key:'demo',        label:'Demolition',                 code:'02400'},
+  {key:'concrete',    label:'Concrete / Foundation',       code:'03000'},
+  {key:'framing',     label:'Framing & Carpentry',         code:'06000'},
+  {key:'roofing',     label:'Roofing',                     code:'08600'},
+  {key:'windows',     label:'Windows & Doors',              code:'08500'},
+  {key:'exterior',    label:'Stucco / Exterior / Sheet Metal', code:'09500'},
+  {key:'insulation',  label:'Insulation',                  code:'07000'},
+  {key:'drywall',     label:'Drywall / Plaster',            code:'09200'},
+  {key:'cabinetry',   label:'Cabinetry & Countertops',      code:'06400'},
+  {key:'tile',        label:'Tile & Showers',               code:'09300'},
+  {key:'flooring',    label:'Flooring',                    code:'09600'},
+  {key:'paint',       label:'Painting',                    code:'09900'},
+  {key:'plumbing',    label:'Plumbing',                    code:'22000'},
+  {key:'hvac',        label:'HVAC',                        code:'23000'},
+  {key:'electrical',  label:'Electrical',                   code:'26000'},
+  {key:'appliances',  label:'Appliances',                   code:'11400'},
+  {key:'pm',          label:'Project Management',           code:'40000'},
+  {key:'ohp',         label:'Overhead, Profit &amp; Liability', code:'—'},
+];
+const CATMAP = Object.fromEntries(CATS.map(c=>[c.key,c]));
+
+const PROPERTIES = {
+  all:   {label:'All Properties', addr:'2535 & 2537 Treasure Dr + ADU', scope:'Portfolio-wide view across every estimate on file.'},
+  '2537':{label:'2537 Treasure Dr', addr:'2537 Treasure Dr, Santa Barbara CA 93105', scope:'Kitchen remodel, laundry/bath conversion, bathroom remodel, garage conversion, new roof, skylights, new electrical panel. (David Burke side)'},
+  '2535':{label:'2535 Treasure Dr', addr:'2535 Treasure Dr, Santa Barbara CA 93105', scope:'Kitchen remodel, laundry/bath conversion, bathroom remodel, garage conversion, new roof, skylights, new electrical panel, outdoor shower. (Alex Kemp side)'},
+  adu:   {label:'ADU', addr:'2535–7 Treasure Dr — rear yard ADU', scope:'New ground-up detached ADU: 2 bath, kitchen, loft storage. Shared driveway between both units.'},
+};
+
+// ---------------------------------------------------------------------
+// Seed estimates, transcribed line-for-line from the source PDFs.
+// Each is a list of individually priced sections/lines as printed in the
+// original scope document — this is the granularity a viewer can flag
+// ("this item is no longer in scope"), not a rolled-up category total.
+// ---------------------------------------------------------------------
+function mkItems(estId, rows){
+  // rows: [cat, label, amount]
+  return rows.map((r,i)=>({iid:estId+'#'+i, cat:r[0], label:r[1], amt:r[2]}));
+}
+
+const SEED = [
+  {id:'seed-seguro-2537', property:'2537', contractor:'Seguro Construction', contact:'todd@seguroconstruction.com · Lic. 909481', date:'2026-09-10', source:'seed',
+    items: mkItems('seed-seguro-2537', [
+      ['general','Temporary Facilities and Maintenance',8462.60],
+      ['demo','Demolition',11763.80],
+      ['framing','Framing and Finish Carpentry (garage conversion, cabinets, vanity, closet)',16217.80],
+      ['framing','Kitchen + Living Room Integration (demo pony wall, shore ceiling, new footings & exposed beam)',22112.80],
+      ['insulation','Insulation',1441.00],
+      ['windows','Windows & Doors',28178.10],
+      ['roofing','Roof',15720.00],
+      ['paint','Painting (not yet priced)',0],
+      ['drywall','Drywall / Plaster',11328.23],
+      ['tile','Tile / Stone (not yet priced)',0],
+      ['flooring','Flooring (not yet priced)',0],
+      ['plumbing','Plumbing – Allowance',32226.00],
+      ['hvac','HVAC',1310.00],
+      ['electrical','Electrical – Allowance',17475.40],
+      ['pm','Project Management',13362.00],
+    ]),
+    note:'Includes a $22,112.80 "Kitchen + Living Room Integration" structural line (demo pony wall, shore ceiling, new footings & exposed beam) not present in the 2535 bid.'},
+  {id:'seed-seguro-2535', property:'2535', contractor:'Seguro Construction', contact:'todd@seguroconstruction.com · Lic. 909481', date:'2026-09-10', source:'seed',
+    items: mkItems('seed-seguro-2535', [
+      ['general','Temporary Facilities and Maintenance',10689.60],
+      ['demo','Demolition',11763.80],
+      ['framing','Framing and Finish Carpentry (garage conversion, cabinets, vanity, closet, L-shaped dining nook)',16217.80],
+      ['insulation','Insulation',1441.00],
+      ['windows','Windows & Doors',28178.10],
+      ['roofing','Roof',15720.00],
+      ['paint','Painting (not yet priced)',0],
+      ['drywall','Drywall / Plaster',10391.58],
+      ['tile','Tile / Stone (not yet priced)',0],
+      ['flooring','Flooring (not yet priced)',0],
+      ['plumbing','Plumbing – Allowance (incl. outdoor shower)',41527.00],
+      ['hvac','HVAC – Allowance (outdoor shower condenser relocation)',7860.00],
+      ['hvac','HVAC (garage register)',1310.00],
+      ['electrical','Electrical',17475.40],
+      ['pm','Project Management',13362.00],
+    ]),
+    note:'Plumbing and HVAC run higher than 2537 to cover the outdoor shower (supply line, floor drain, condenser relocation). No "Kitchen + Living Room Integration" line — confirm whether that scope applies here too.'},
+  {id:'seed-seguro-adu', property:'adu', contractor:'Seguro Construction', contact:'todd@seguroconstruction.com · Lic. 909481', date:'2026-09-10', source:'seed',
+    items: mkItems('seed-seguro-adu', [
+      ['general','Temporary Facilities and Site Maintenance',25676.00],
+      ['demo','Demolition',6340.40],
+      ['concrete','Concrete (footings, retaining wall, slab)',38645.00],
+      ['exterior','Sheetmetal / Decorative Steel',18438.25],
+      ['framing','Framing – Finish Carpentry',44802.00],
+      ['cabinetry','Cabinetry – 2 bathroom vanities + kitchen cabinets (not yet priced)',0],
+      ['insulation','Insulation',19846.50],
+      ['windows','Glazing / Mirrors (not yet priced)',0],
+      ['windows','Doors and Windows – Milgard / TM Cobb',55927.55],
+      ['roofing','Roof',26200.00],
+      ['drywall','Drywall',14233.15],
+      ['drywall','Plaster (exterior stucco to match existing home)',29113.44],
+      ['tile','Tile / Stone (not yet priced)',0],
+      ['flooring','Flooring – Allowance',18078.00],
+      ['appliances','Appliances / Equipment (not priced – need specs)',0],
+      ['plumbing','Plumbing',30654.00],
+      ['hvac','HVAC – Mitsubishi mini splits',22204.50],
+      ['electrical','Electrical – Allowance',48902.30],
+      ['site','Grading / Trenching – Allowance',16375.00],
+      ['pm','Project Management',38252.00],
+    ]),
+    note:'Cabinetry (2 vanities + kitchen cabinets) is priced at $0 — a placeholder, not a real number. Appliances also unpriced.'},
+  {id:'seed-mapleleaf-2537', property:'2537', contractor:'Maple Leaf Construction', contact:'Josh@MapleLeafSB.com · CLN 960826', date:'2026-09-09', source:'seed',
+    items: mkItems('seed-mapleleaf-2537', [
+      ['general','General Conditions',10000],
+      ['demo','Demolition',10000],
+      ['concrete','Concrete (garage leveling slab)',10000],
+      ['framing','Framing',3500],
+      ['framing','Finish Carpentry (interior doors, casing, baseboard, hardware)',12500],
+      ['roofing','Roof (1/2 of new roof)',9000],
+      ['roofing','Gutters and downspout to match house',3500],
+      ['electrical','Electrical (new per approved plans)',31970],
+      ['plumbing','Plumbing – new bathroom',24000],
+      ['plumbing','Plumbing – existing bath',20000],
+      ['plumbing','Plumbing – kitchen',5600],
+      ['insulation','Insulation',500],
+      ['drywall','Drywall',8000],
+      ['paint','Paint',16540],
+      ['cabinetry','Kitchen cabinets / install',35000],
+      ['cabinetry','New vanities',3500],
+      ['cabinetry','Kitchen countertops',10000],
+      ['appliances','Appliance installation (owner-provided units)',1200],
+      ['flooring','Flooring (TBD)',15000],
+      ['tile','Tile – existing bath',22000],
+      ['tile','Tile shower & floor – new bath',18000],
+      ['pm','Supervision',10792.40],
+      ['ohp','Overhead and Profit (13%)',36478.31],
+      ['ohp','Liability (2%)',5612.05],
+    ]),
+    note:'Every category is priced — no blanks. Overhead & Profit (13%) and Liability (2%) are broken out as explicit line items on top of the trade subtotal.'},
+  {id:'seed-mapleleaf-2535', property:'2535', contractor:'Maple Leaf Construction', contact:'Josh@MapleLeafSB.com · CLN 960826', date:'2026-09-09', source:'seed',
+    items: mkItems('seed-mapleleaf-2535', [
+      ['general','General Conditions',10000],
+      ['demo','Demolition',10000],
+      ['concrete','Concrete (garage leveling slab)',10000],
+      ['framing','Framing',3500],
+      ['framing','Finish Carpentry (interior doors, casing, baseboard, hardware)',12500],
+      ['roofing','Roof (1/2 of new roof)',9000],
+      ['roofing','Gutters and downspout to match house',3500],
+      ['electrical','Electrical (new per approved plans)',31970],
+      ['plumbing','Plumbing – new bathroom',24000],
+      ['plumbing','Plumbing – existing bath',20000],
+      ['plumbing','Plumbing – kitchen',5600],
+      ['insulation','Insulation',500],
+      ['drywall','Drywall',8000],
+      ['paint','Paint',16540],
+      ['cabinetry','Kitchen cabinets / install',35000],
+      ['cabinetry','New vanities',3500],
+      ['cabinetry','Kitchen countertops',10000],
+      ['appliances','Appliance installation (owner-provided units)',1200],
+      ['flooring','Flooring (TBD)',15000],
+      ['tile','Tile – existing bath',22000],
+      ['tile','Tile shower & floor – new bath',18000],
+      ['pm','Supervision',10792.40],
+      ['ohp','Overhead and Profit (13%)',36478.31],
+      ['ohp','Liability (2%)',5612.05],
+    ]),
+    note:'Identical to the penny to the 2537 proposal in every one of 17 categories — same total, same line items, same supervision fee.'},
+  {id:'seed-mapleleaf-adu', property:'adu', contractor:'Maple Leaf Construction', contact:'Josh@MapleLeafSB.com · CLN 960826', date:'2026-09-09', source:'seed',
+    items: mkItems('seed-mapleleaf-adu', [
+      ['general','General Conditions',25000],
+      ['site','Site Work – over-excavation, export, demo retaining wall',65000],
+      ['site','Form and pour new retaining wall',40000],
+      ['site','Fencing',10000],
+      ['demo','Demolition – fences, patios for ADU',15000],
+      ['concrete','New foundation for ADU',58000],
+      ['concrete','Export soil',5000],
+      ['framing','Framing for new ADU',30000],
+      ['roofing','New roof for ADU',10000],
+      ['roofing','Gutters and downspout to match house',3500],
+      ['roofing','Roof work at E (existing) house',4500],
+      ['windows','Exterior door/window installation labor',11840],
+      ['windows','Marvin fiberglass windows',25000],
+      ['windows','Sheet metal pans at doors/windows – allowance',2500],
+      ['exterior','Stucco – match house',35000],
+      ['electrical','Electrical (new per approved plans)',31970],
+      ['plumbing','Plumbing – sewer hookups, new supply, tankless heater, increased main-house supply',36200],
+      ['hvac','HVAC – mini split (1 ducted, 1 wall mount)',34780],
+      ['insulation','Insulation',6030],
+      ['drywall','Drywall',11654],
+      ['framing','Finish Carpentry – doors, casing, baseboard, hardware',16540],
+      ['framing','Interior doors',6400],
+      ['framing','Closet shelf and pole',2650],
+      ['paint','Paint interior of ADU',16540],
+      ['paint','Paint exterior of ADU',12950],
+      ['paint','Paint E house wall',2500],
+      ['paint','Repaint main house (listed, not priced, not included in total)',0],
+      ['cabinetry','Kitchen cabinets / installation',5000],
+      ['cabinetry','New vanities',6500],
+      ['cabinetry','Kitchen countertops',2500],
+      ['appliances','Appliances (by owner)',0],
+      ['flooring','Flooring (TBD)',15000],
+      ['tile','Pre-fab shower kits',8500],
+      ['pm','Supervision',22242.16],
+      ['ohp','Overhead and Profit (13%)',75178.50],
+      ['ohp','Liability (2%)',11565.92],
+    ]),
+    note:'Lists "Repaint main house ($20,000)" inside the ADU scope with no dollar amount entered and NOT included in the $665,040.58 total — a likely future change order, not yet priced or agreed.'},
+];
+
+// ---------------------------------------------------------------------
+// Hand-authored flags (grounded in the numbers above)
+// ---------------------------------------------------------------------
+const FLAGS = {
+  all: [
+    {sev:'crit', title:'Same $31,970 electrical figure, three separate scopes', body:'Maple Leaf’s electrical allowance is <b>exactly $31,970.00</b> on all three of its proposals — 2537, 2535, and the ADU — despite those being a duplex-side rewire, a second duplex-side rewire, and an entirely new ADU electrical system (sub-panel, 26 recessed lights, 20 outlets, a dedicated cooktop circuit, Edison coordination). Real takeoffs don’t land on the identical number three times. Ask Maple Leaf for a scope-specific electrical breakdown for each building before treating any of the three figures as reliable.'},
+    {sev:'warn', title:'2535 and 2537 quoted identically by Maple Leaf', body:'Maple Leaf’s proposals for 2535 and 2537 match to the penny across all 17 cost categories — same $322,692.76 total, same $16,540 paint, same $10,792.40 supervision fee. Plausible for a true mirror-image duplex, but worth confirming a second, unit-specific site walk actually happened rather than one estimate being copied for the other.'},
+    {sev:'warn', title:'Gutters/downspout billed three separate times', body:'Maple Leaf charges "Gutters and down spout to match house" at $3,500 in the 2537 bid, $3,500 in the 2535 bid, and $3,500 again in the ADU bid ($10,500 total). Reasonable if each is a genuinely separate run of new gutter, but confirm linear footage per building rather than a flat per-job fee being applied three times.'},
+    {sev:'info', title:'Seguro leaves Painting, Tile/Showers &amp; Flooring unpriced on both duplex units', body:'Seguro’s 2537 and 2535 estimates both show $0 (struck through) for Painting, Tile/Stone, and Flooring — those trades simply haven’t been bid yet. Maple Leaf’s otherwise-higher total already includes all three ($71,540 combined per side). A fair total-to-total comparison needs Seguro’s missing trades priced first — see the Benchmarks tab for rough fill-in numbers.'},
+    {sev:'info', title:'No separate Overhead &amp; Profit line from Seguro', body:'Maple Leaf explicitly breaks out Overhead &amp; Profit (13%) and Liability (2%) as line items on every proposal. Seguro’s documents show no equivalent line at all. Ask Seguro in writing whether markup is already folded into their unit prices — otherwise a double-digit percentage could appear later as a change order.'},
+  ],
+  '2537': [
+    {sev:'warn', title:'Electrical: Maple Leaf runs 83% above Seguro', body:'Maple Leaf: <b>$31,970</b> vs Seguro: <b>$17,475.40</b> for the same panel upgrade + kitchen/bath/garage lighting scope. Combined with the portfolio-wide flag that Maple Leaf’s $31,970 repeats verbatim across all three of its bids, this number is the one most worth re-quoting from a third electrician before signing either contract.'},
+    {sev:'info', title:'Cabinetry cost is bundled, not broken out, in Seguro’s bid', body:'Seguro folds "purchase and install new kitchen cabinets" and "purchase and install new bathroom vanity" into its $38,330.60 Framing & Carpentry line without a separate dollar figure, while Maple Leaf itemizes cabinetry + vanities + countertops at $48,500. Ask Seguro for the cabinet/vanity portion specifically so the two bids can be compared trade-for-trade.'},
+    {sev:'info', title:'Unpriced scope inflates the apples-to-apples gap', body:'Seguro’s $179,597.73 total omits Painting, Tile, and Flooring entirely. Adding Maple Leaf’s pricing for those same trades (~$71,540) as a placeholder brings an adjusted Seguro estimate to roughly <b>$251,000</b>, versus Maple Leaf’s fully-scoped <b>$322,692.76</b> — still lower, but a $71k narrower gap than the headline totals suggest.'},
+  ],
+  '2535': [
+    {sev:'crit', title:'"Kitchen + Living Room Integration" missing from this bid', body:'Seguro’s 2537 estimate includes a $22,112.80 line for demoing the pony wall between kitchen and living room, shoring the ceiling, and installing a new exposed beam on new footings. That scope does not appear anywhere in the 2535 estimate. Confirm against the construction plans whether both units get this structural opening — if so, the 2535 number is understated by roughly $22k.'},
+    {sev:'warn', title:'Electrical: Maple Leaf runs 83% above Seguro', body:'Same gap as 2537 — Maple Leaf $31,970 vs Seguro $17,475.40 — and the same portfolio-wide placeholder-number concern applies.'},
+    {sev:'info', title:'Unpriced scope inflates the apples-to-apples gap', body:'Seguro’s $175,936.28 total also omits Painting, Tile, and Flooring. Adding Maple Leaf’s pricing for those trades (~$71,540) brings an adjusted Seguro estimate to roughly <b>$247,500</b> against Maple Leaf’s <b>$322,692.76</b>.'},
+  ],
+  adu: [
+    {sev:'crit', title:'Site work + concrete: Maple Leaf is $123,000 higher', body:'Seguro prices Grading/Trenching + Concrete/Foundation (incl. the new retaining wall) at $16,375 + $38,645 = <b>$55,020</b>. Maple Leaf prices Site Work + Concrete at $115,000 + $63,000 = <b>$178,000</b> — over 3x Seguro’s number and the single largest dollar gap anywhere in the ADU comparison. Ask Maple Leaf for the soils-driven quantities behind this: cubic yards of over-excavation, retaining wall linear footage/height, and export truck loads.'},
+    {sev:'crit', title:'Electrical is lower here, despite being the biggest electrical scope', body:'Maple Leaf’s ADU electrical figure ($31,970) is actually <i>less</i> than Seguro’s ($48,902.30) — the opposite of the pattern on the duplex sides — even though the ADU scope (new sub-panel, 26 can lights, 20 outlets, dedicated cooktop circuit) is larger than either duplex unit’s rewire. Combined with that same $31,970 appearing on both smaller duplex jobs, this is the clearest evidence the Maple Leaf electrical number is a stock placeholder rather than an ADU-specific takeoff.'},
+    {sev:'crit', title:'Cabinetry is essentially unpriced on both bids', body:'Seguro prices the ADU’s kitchen cabinets + 2 bathroom vanities at <b>$0</b> (placeholder). Maple Leaf prices kitchen cabinets + 2 vanities + countertops at just <b>$14,000</b> combined. A fully cabineted kitchen and two bathroom vanities in Santa Barbara commonly run well above that — see Benchmarks. This is likely the single biggest budget gap in the whole ADU scope and needs real vendor quotes before either contract is signed.'},
+    {sev:'warn', title:'Possible roof double-count on the existing house', body:'Maple Leaf’s two duplex bids already charge $9,000 each ($18,000 combined) for "1/2 of new roof" on the existing house. The ADU proposal separately adds "Roof work at E house — $4,500." Confirm this $4,500 is genuinely additional roof scope (not already covered by the two half-roof charges) before approving it.'},
+    {sev:'warn', title:'"Repaint main house ($20,000)" listed but not priced or totaled', body:'This line sits inside Maple Leaf’s ADU proposal with no dollar figure entered and is excluded from the $665,040.58 total. Get it formally priced and added to the contract now, or explicitly removed from scope — items like this are exactly what turn into unplanned change orders mid-project.'},
+  ],
+};
+
+// ---------------------------------------------------------------------
+// Santa Barbara / coastal-CA general benchmarks (approximate — verify locally)
+// ---------------------------------------------------------------------
+const BENCH = [
+  {item:'Full kitchen remodel (mid–high finish)', range:'$100k – $250k', note:'Wide range driven by whether walls move; cabinetry + countertop grade is usually the biggest swing factor.'},
+  {item:'Full bathroom remodel', range:'$35k – $75k', note:'Per bathroom, gut-to-studs with new tile, vanity, and fixtures.'},
+  {item:'Garage-to-living-space conversion', range:'$150 – $300 / sq ft', note:'Includes floor raise, insulation, finish — roughly matches the scope in these bids.'},
+  {item:'Re-roof, tear-off + new (comp/asphalt)', range:'$12 – $20 / sq ft', note:'Tile-to-match roofing common in Santa Barbara runs higher than comp shingle.'},
+  {item:'Ground-up detached ADU (fully finished)', range:'$450 – $700+ / sq ft', note:'Santa Barbara’s coastal labor rates, Title 24, and CCC/coastal permitting push this toward the top of statewide ranges.'},
+  {item:'Electrical panel upgrade + partial rewire', range:'$15k – $30k', note:'Depends on panel size, run lengths, and number of new circuits/fixtures.'},
+  {item:'General contractor overhead &amp; profit', range:'10% – 20%', note:'Typical range for a licensed GC on a project this size; get it in writing either way.'},
+];
+
+// ---------------------------------------------------------------------
+// State
+// ---------------------------------------------------------------------
+let estimates = SEED.slice();
+let annotations = {};   // iid -> {note, exclude, ts}
+let expanded = {};      // "propKey|catKey" -> true when a category row is expanded
+let openFlagForm = null; // iid currently showing its inline flag editor
+let dbApi = null;
+let activeTab = 'all';
+let aduSqft = null;
+
+const fmt = n => '$' + Math.round(n).toLocaleString('en-US');
+const fmt2 = n => '$' + n.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2});
+const esc = s => String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');
+
+// Raw ("as quoted") total: every line item, regardless of flags.
+const total = est => est.items.reduce((a,it)=>a+(Number(it.amt)||0),0);
+// Adjusted total: excludes any item flagged "no longer in scope".
+const totalAdjusted = est => est.items.reduce((a,it)=> a + (annotations[it.iid]&&annotations[it.iid].exclude ? 0 : (Number(it.amt)||0)), 0);
+const hasExclusions = est => est.items.some(it => annotations[it.iid] && annotations[it.iid].exclude);
+// Roll items up into category totals (adjusted — excluded items drop out).
+function catsOf(est){
+  const out = {};
+  est.items.forEach(it=>{
+    const excluded = annotations[it.iid] && annotations[it.iid].exclude;
+    out[it.cat] = (out[it.cat]||0) + (excluded ? 0 : (Number(it.amt)||0));
+  });
+  return out;
+}
+function itemsIn(est, catKey){ return est.items.filter(it=>it.cat===catKey); }
+function isUnpriced(est, catKey){
+  const rows = itemsIn(est, catKey);
+  return rows.length>0 && rows.every(it=>(Number(it.amt)||0)===0);
+}
+
+function estimatesFor(prop){
+  if(prop==='all') return estimates;
+  return estimates.filter(e=>e.property===prop);
+}
+
+function contractorsIn(list){
+  const seen = [];
+  list.forEach(e=>{ if(!seen.includes(e.contractor)) seen.push(e.contractor); });
+  return seen;
+}
+
+function colorFor(contractor, idx){
+  if(/seguro/i.test(contractor)) return 'seguro';
+  if(/maple/i.test(contractor)) return 'mapleleaf';
+  return idx%2===0 ? 'seguro' : 'mapleleaf';
+}
+
+// ---------------------------------------------------------------------
+// Render: tabs
+// ---------------------------------------------------------------------
+function renderTabs(){
+  const nav = document.getElementById('tabs');
+  nav.innerHTML = Object.keys(PROPERTIES).map(key=>{
+    return `<button data-tab="${key}" class="${key===activeTab?'active':''}">${PROPERTIES[key].label}</button>`;
+  }).join('') + `<button data-tab="benchmarks" class="${activeTab==='benchmarks'?'active':''}">Benchmarks</button>` +
+              `<button data-tab="manage" class="${activeTab==='manage'?'active':''}">Estimates &amp; Add New</button>`;
+  nav.querySelectorAll('button').forEach(b=>b.addEventListener('click', ()=>{ activeTab=b.dataset.tab; render(); }));
+}
+
+// ---------------------------------------------------------------------
+// Render: a property/portfolio view
+// ---------------------------------------------------------------------
+function renderPropertyView(propKey){
+  const meta = PROPERTIES[propKey];
+  const list = estimatesFor(propKey);
+  const contractors = contractorsIn(list);
+
+  let html = `<div class="prop-head"><h2>${meta.label}</h2><div class="addr">${meta.addr}</div><div class="scope">${meta.scope}</div></div>`;
+
+  // stat tiles
+  html += '<div class="tiles">';
+  if(propKey==='all'){
+    const grand = {};
+    list.forEach(e=>{ grand[e.contractor] = (grand[e.contractor]||0) + totalAdjusted(e); });
+    Object.keys(grand).forEach((c,i)=>{
+      html += `<div class="tile"><div class="label"><span class="dot" style="background:var(--${colorFor(c,i)})"></span>${c}</div><div class="value">${fmt(grand[c])} <small>combined</small></div><div class="foot">${list.filter(e=>e.contractor===c).length} estimate(s) on file</div></div>`;
+    });
+    html += `<div class="tile"><div class="label">Estimates on file</div><div class="value">${list.length}</div><div class="foot">across all three scopes</div></div>`;
+  } else {
+    list.forEach((e,i)=>{
+      const adj = hasExclusions(e);
+      html += `<div class="tile"><div class="label"><span class="dot" style="background:var(--${colorFor(e.contractor,i)})"></span>${e.contractor}</div><div class="value">${fmt(totalAdjusted(e))}${adj?` <small style="text-decoration:line-through">${fmt(total(e))}</small>`:''}</div><div class="foot">${adj?'adjusted for flagged items · ':''}dated ${e.date}</div></div>`;
+    });
+    if(list.length===2){
+      const diff = totalAdjusted(list[1]) - totalAdjusted(list[0]);
+      const pct = (Math.abs(diff)/totalAdjusted(list[0])*100).toFixed(0);
+      html += `<div class="tile delta"><div class="label">Spread</div><div class="value ${diff>0?'pos':'neg'}">${diff>0?'+':'−'}${fmt(Math.abs(diff))}</div><div class="foot">${pct}% between the two bids</div></div>`;
+    }
+    const flagCount = (FLAGS[propKey]||[]).length + list.reduce((n,e)=>n+e.items.filter(it=>annotations[it.iid]).length,0);
+    html += `<div class="tile"><div class="label">Flags raised</div><div class="value">${flagCount}</div><div class="foot">see below</div></div>`;
+  }
+  html += '</div>';
+
+  // ADU sqft calculator
+  if(propKey==='adu' && list.length){
+    html += `<div class="sqft-box">
+      <span>ADU conditioned area:</span>
+      <input type="number" id="sqftInput" placeholder="e.g. 750" value="${aduSqft||''}" min="0" step="1">
+      <span>sq ft</span>
+      <span class="out" id="sqftOut">${aduSqft ? list.map(e=>`${e.contractor.split(' ')[0]}: <b>${'$'+Math.round(totalAdjusted(e)/aduSqft)}</b>/sqft`).join(' &nbsp;·&nbsp; ') : 'enter square footage from the ADU plans to compare cost-per-square-foot across bids'}</span>
+    </div>`;
+  }
+
+  // category comparison
+  if(list.length){
+    const catTotals = list.map(e=>catsOf(e));
+    const usedCats = CATS.filter(c => list.some(e => e.items.some(it=>it.cat===c.key)));
+    html += `<h3 class="section-title">Category breakdown</h3>`;
+    html += `<div class="legend">${contractors.map((c,i)=>`<span><i style="background:var(--${colorFor(c,i)})"></i>${c}</span>`).join('')}<span><i style="background:var(--warn)"></i>unpriced / placeholder</span><span>🚩 flag a line item that looks wrong</span></div>`;
+    html += `<table class="catable"><thead><tr><th>Category</th>${list.map(e=>`<th class="num">${e.contractor.split(' ')[0]}</th>`).join('')}<th style="width:30%">Relative spend</th><th style="width:26px"></th></tr></thead><tbody>`;
+    usedCats.forEach(c=>{
+      const vals = list.map((e,i)=>catTotals[i][c.key]||0);
+      const max = Math.max(...vals, 1);
+      const expKey = propKey+'|'+c.key;
+      const isOpen = !!expanded[expKey];
+      html += `<tr class="catrow"><td class="catname">${c.label}<code>${c.code}</code></td>`;
+      list.forEach((e,i)=>{
+        const v = catTotals[i][c.key]||0;
+        const unpriced = isUnpriced(e, c.key);
+        const flaggedHere = itemsIn(e,c.key).some(it=>annotations[it.iid]);
+        html += `<td class="num ${v===0?'zero':''}">${unpriced? '<span class="inline-flag warn">TBD</span>' : fmt(v)}${flaggedHere?' <span class="inline-flag crit" title="a line item here is flagged">🚩</span>':''}</td>`;
+      });
+      html += `<td class="bars">`;
+      list.forEach((e,i)=>{
+        const v = catTotals[i][c.key]||0;
+        const pct = max ? Math.max((v/max*100),(v>0?4:0)) : 0;
+        html += `<div class="barline"><span class="who">${e.contractor.split(' ')[0]}</span><div class="track"><div class="fill ${colorFor(e.contractor,i)}" style="width:${pct}%"></div></div></div>`;
+      });
+      html += `</td>`;
+      html += `<td><button class="expandbtn" data-expkey="${expKey}" title="Show individual line items">${isOpen?'▾':'▸'}</button></td></tr>`;
+
+      if(isOpen){
+        html += `<tr class="detailrow"><td></td><td colspan="${list.length+2}"><div class="itemcols">`;
+        list.forEach((e,i)=>{
+          const rows = itemsIn(e, c.key);
+          html += `<div class="itemcol"><div class="itemcol-head" style="color:var(--${colorFor(e.contractor,i)})">${e.contractor}</div>`;
+          if(!rows.length){
+            html += `<div class="itemrow empty">— no line item in this category —</div>`;
+          }
+          rows.forEach(it=>{
+            const ann = annotations[it.iid];
+            const showForm = openFlagForm===it.iid;
+            html += `<div class="itemrow ${ann?'flagged':''}">
+              <div class="itxt">
+                <div class="ilabel ${ann&&ann.exclude?'strike':''}">${esc(it.label)}</div>
+                ${ann ? `<div class="inote"><span class="inline-flag ${ann.exclude?'crit':'warn'}">${ann.exclude?'Excluded':'Watch'}</span> ${esc(ann.note)} <button class="linklike" data-clear="${it.iid}">clear</button></div>` : ''}
+              </div>
+              <div class="iamt num">${fmt(it.amt)}</div>
+              <button class="flagbtn" data-flag="${it.iid}" title="Flag this line item">🚩</button>
+            </div>`;
+            if(showForm){
+              html += `<div class="flagform" data-form="${it.iid}">
+                <textarea class="fnote" placeholder="e.g. no longer part of scope, verify with contractor, seems duplicated…">${ann?esc(ann.note):''}</textarea>
+                <label class="fexclude"><input type="checkbox" class="fexcl" ${ann&&ann.exclude?'checked':''}> Exclude from totals (no longer in scope)</label>
+                <div class="btnrow"><button class="btn primary fsave" data-save="${it.iid}">Save flag</button><button class="btn fcancel" data-cancel="${it.iid}">Cancel</button></div>
+              </div>`;
+            }
+          });
+          html += `</div>`;
+        });
+        html += `</div></td></tr>`;
+      }
+    });
+    html += `<tr class="totalrow"><td>Total${list.some(e=>hasExclusions(e))?' <span style="font-weight:400;font-size:11px;color:var(--faint)">(adjusted)</span>':''}</td>${list.map(e=>`<td class="num">${fmt(totalAdjusted(e))}${hasExclusions(e)?`<div style="font-weight:400;font-size:11px;color:var(--faint);text-decoration:line-through">${fmt(total(e))}</div>`:''}</td>`).join('')}<td></td><td></td></tr>`;
+    html += `</tbody></table>`;
+  } else {
+    html += `<div class="disclaimer">No estimates loaded for this property yet. Add one from the "Estimates &amp; Add New" tab.</div>`;
+  }
+
+  // flags
+  const flags = FLAGS[propKey] || [];
+  if(flags.length){
+    html += `<h3 class="section-title">Insights &amp; redundancy flags <span class="n">${flags.length}</span></h3><div class="flags">`;
+    flags.forEach(f=>{
+      html += `<div class="flag ${f.sev}"><div class="ftitle"><span class="fbadge">${f.sev==='crit'?'Priority':f.sev==='warn'?'Watch':'Note'}</span>${f.title}</div><div class="fbody">${f.body}</div></div>`;
+    });
+    html += `</div>`;
+  }
+
+  // per-estimate notes
+  const withNotes = list.filter(e=>e.note);
+  if(withNotes.length){
+    html += `<h3 class="section-title">Scope notes</h3><div class="flags">`;
+    withNotes.forEach(e=>{
+      html += `<div class="flag info"><div class="ftitle"><span class="fbadge">${e.contractor}</span></div><div class="fbody">${e.note}</div></div>`;
+    });
+    html += `</div>`;
+  }
+
+  return html;
+}
+
+function renderBenchmarks(){
+  let html = `<div class="prop-head"><h2>Santa Barbara cost benchmarks</h2><div class="scope">General market ranges for this scope of work in coastal Santa Barbara County. Use these to sanity-check line items above, not as quotes.</div></div>`;
+  html += `<table class="bench"><thead><tr><th>Scope item</th><th>Typical range</th><th>Note</th></tr></thead><tbody>`;
+  BENCH.forEach(b=>{
+    html += `<tr><td>${b.item}</td><td class="range">${b.range}</td><td class="note">${b.note}</td></tr>`;
+  });
+  html += `</tbody></table>`;
+  html += `<div class="disclaimer">These are general-knowledge planning ranges for the Santa Barbara / South Coast market, not sourced from a live pricing feed. Before using them to negotiate, cross-check against 2–3 additional local bids or a current cost-estimating service — coastal permitting timelines, Title 24 requirements, and site access can move any of these ranges meaningfully.</div>`;
+  return html;
+}
+
+function renderManage(){
+  let html = `<div class="prop-head"><h2>Estimates on file &amp; add a new one</h2><div class="scope">As more contractor bids come in, add them here — they’ll show up immediately in every comparison tab above, for anyone who opens this page.</div></div>`;
+
+  html += `<div class="panel"><details class="add" id="addDetails"><summary>Add a new estimate</summary>
+    <div class="formgrid">
+      <div><label>Property</label><select id="f_property">
+        <option value="2537">2537 Treasure Dr</option>
+        <option value="2535">2535 Treasure Dr</option>
+        <option value="adu">ADU</option>
+      </select></div>
+      <div><label>Contractor name</label><input id="f_contractor" placeholder="e.g. Coastal Build Co."></div>
+      <div><label>Date</label><input id="f_date" type="date"></div>
+    </div>
+    <div class="hint">Add one row per line item. Pick the closest category — you can add several rows under the same category and they’ll be summed.</div>
+    <div class="lineitems" id="lineitems"></div>
+    <div class="btnrow">
+      <button class="btn" id="addRow">+ Add line item</button>
+      <button class="btn primary" id="saveEstimate">Save estimate</button>
+    </div>
+    <div class="formfoot">Total so far: <b class="num" id="runningTotal">$0</b></div>
+    <div class="saved-ok" id="savedOk">Saved — it now appears in the comparison tabs.</div>
+  </details></div>`;
+
+  html += `<h3 class="section-title">All estimates on file <span class="n">${estimates.length}</span></h3>`;
+  html += `<div style="overflow-x:auto"><table class="registry"><thead><tr><th>Property</th><th>Contractor</th><th>Date</th><th class="num">Total</th><th>Source</th><th></th></tr></thead><tbody>`;
+  estimates.forEach(e=>{
+    html += `<tr><td>${PROPERTIES[e.property].label}</td><td>${e.contractor}<br><span style="color:var(--faint);font-size:11px">${e.contact||''}</span></td><td>${e.date}</td><td class="num">${fmt(total(e))}</td><td><span class="src-pill ${e.source==='added'?'added':''}">${e.source==='added'?'Added':'Original'}</span></td><td>${e.source==='added'?`<button class="del" data-id="${e.id}">Remove</button>`:''}</td></tr>`;
+  });
+  html += `</tbody></table></div>`;
+  return html;
+}
+
+function wireManage(){
+  const addBtn = document.getElementById('addRow');
+  const saveBtn = document.getElementById('saveEstimate');
+  const container = document.getElementById('lineitems');
+  if(!addBtn) return;
+
+  function addRow(cat, desc, amt){
+    const row = document.createElement('div');
+    row.className = 'lineitem';
+    row.innerHTML = `<select class="li-cat">${CATS.map(c=>`<option value="${c.key}" ${c.key===cat?'selected':''}>${c.label}</option>`).join('')}</select>
+      <input class="li-desc" placeholder="Description" value="${desc||''}">
+      <input class="li-amt amt" type="number" step="0.01" placeholder="0.00" value="${amt!=null?amt:''}">
+      <button class="rm" type="button">×</button>`;
+    row.querySelector('.rm').addEventListener('click', ()=>{ row.remove(); updateRunning(); });
+    row.querySelector('.li-amt').addEventListener('input', updateRunning);
+    container.appendChild(row);
+  }
+  function updateRunning(){
+    let sum = 0;
+    container.querySelectorAll('.li-amt').forEach(i=>{ sum += Number(i.value)||0; });
+    document.getElementById('runningTotal').textContent = fmt(sum);
+  }
+  addRow('general','','');
+  updateRunning();
+
+  addBtn.addEventListener('click', ()=>{ addRow('general','',''); updateRunning(); });
+
+  saveBtn.addEventListener('click', async ()=>{
+    const property = document.getElementById('f_property').value;
+    const contractor = document.getElementById('f_contractor').value.trim() || 'Unnamed contractor';
+    const date = document.getElementById('f_date').value || new Date().toISOString().slice(0,10);
+    const estId = 'added-'+Date.now();
+    const items = [];
+    container.querySelectorAll('.lineitem').forEach((row,i)=>{
+      const cat = row.querySelector('.li-cat').value;
+      const desc = row.querySelector('.li-desc').value.trim() || CATMAP[cat].label;
+      const amt = Number(row.querySelector('.li-amt').value)||0;
+      items.push({iid: estId+'#'+i, cat, label: desc, amt});
+    });
+    const est = {id:estId, property, contractor, contact:'', date, source:'added', items, note:''};
+    estimates.push(est);
+    if(dbApi){
+      try{ await dbApi.collection('estimates').doc(est.id).set(est); }catch(e){ /* still shown locally even if the write fails */ }
+    }
+    document.getElementById('savedOk').style.display='block';
+    render();
+  });
+
+  document.querySelectorAll('button.del').forEach(b=>{
+    b.addEventListener('click', async ()=>{
+      const id = b.dataset.id;
+      estimates = estimates.filter(e=>e.id!==id);
+      if(dbApi){ try{ await dbApi.collection('estimates').doc(id).delete(); }catch(e){} }
+      render();
+    });
+  });
+}
+
+async function setAnnotation(iid, data){
+  annotations[iid] = data;
+  if(dbApi){
+    try{ await dbApi.collection('annotations').doc(iid).set(Object.assign({iid}, data)); }catch(e){ /* kept locally even if the write fails */ }
+  }
+}
+async function clearAnnotation(iid){
+  delete annotations[iid];
+  if(dbApi){
+    try{ await dbApi.collection('annotations').doc(iid).delete(); }catch(e){}
+  }
+}
+
+function wireCategoryTable(){
+  document.querySelectorAll('button.expandbtn').forEach(b=>{
+    b.addEventListener('click', ()=>{
+      const k = b.dataset.expkey;
+      expanded[k] = !expanded[k];
+      openFlagForm = null;
+      render();
+    });
+  });
+  document.querySelectorAll('button.flagbtn').forEach(b=>{
+    b.addEventListener('click', ()=>{
+      openFlagForm = (openFlagForm===b.dataset.flag) ? null : b.dataset.flag;
+      render();
+    });
+  });
+  document.querySelectorAll('[data-cancel]').forEach(b=>{
+    b.addEventListener('click', ()=>{ openFlagForm=null; render(); });
+  });
+  document.querySelectorAll('[data-save]').forEach(b=>{
+    b.addEventListener('click', async ()=>{
+      const iid = b.dataset.save;
+      const form = document.querySelector(`.flagform[data-form="${iid}"]`);
+      const note = form.querySelector('.fnote').value.trim();
+      const exclude = form.querySelector('.fexcl').checked;
+      if(!note && !exclude){ await clearAnnotation(iid); }
+      else{ await setAnnotation(iid, {note: note || 'Flagged for review', exclude, ts: new Date().toISOString()}); }
+      openFlagForm = null;
+      render();
+    });
+  });
+  document.querySelectorAll('[data-clear]').forEach(b=>{
+    b.addEventListener('click', async ()=>{ await clearAnnotation(b.dataset.clear); render(); });
+  });
+}
+
+function render(){
+  renderTabs();
+  const views = document.getElementById('views');
+  let html = '';
+  if(activeTab==='benchmarks') html = renderBenchmarks();
+  else if(activeTab==='manage') html = renderManage();
+  else html = renderPropertyView(activeTab);
+  views.innerHTML = `<section class="view active">${html}</section>`;
+  document.getElementById('estCount').textContent = estimates.length;
+
+  if(activeTab==='manage') wireManage();
+  else wireCategoryTable();
+
+  if(activeTab==='adu'){
+    const sqftInput = document.getElementById('sqftInput');
+    if(sqftInput){
+      sqftInput.addEventListener('input', ()=>{ aduSqft = Number(sqftInput.value)||null; render(); });
+    }
+  }
+}
+
+// ---------------------------------------------------------------------
+// Boot
+// ---------------------------------------------------------------------
+async function boot(){
+  render();
+  try{
+    if(window.claude && window.claude.use){
+      dbApi = await window.claude.use('db');
+      if(dbApi){
+        dbApi.collection('estimates').onSnapshot(snap=>{
+          const added = snap.docs.map(d=>d.data()).filter(a=>a && a.id && Array.isArray(a.items));
+          estimates = SEED.concat(added);
+          render();
+        }, ()=>{ /* fall back silently to seed + local additions */ });
+        dbApi.collection('annotations').onSnapshot(snap=>{
+          const next = {};
+          snap.docs.forEach(d=>{ const data = d.data(); if(data && data.iid) next[data.iid] = data; });
+          annotations = next;
+          render();
+        }, ()=>{ /* fall back silently — flags stay local-only this session */ });
+      }
+    }
+  }catch(e){ /* no db capability available in this view */ }
+}
+boot();
+
+})();
+</script>
