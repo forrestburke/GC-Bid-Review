@@ -10,23 +10,23 @@
     --faint:#8b909b;
     --line:#dcdad0;
     --line-strong:#c7c4b7;
-    --accent:#a8592f;
+    --accent:#1c2430;
     --accent-ink:#ffffff;
-    --accent-soft:#f1e1d4;
+    --accent-soft:#e4e6ea;
     --good:#2e7d55;
     --good-soft:#e2efe7;
     --warn:#a8760f;
     --warn-soft:#f5ead0;
     --crit:#b1362a;
     --crit-soft:#f6e0dc;
-    --seguro:#3c5a72;
-    --seguro-soft:#dfe7ec;
-    --mapleleaf:#7a5230;
-    --mapleleaf-soft:#ece1d3;
-    --toa:#237a63;
-    --toa-soft:#dbece6;
-    --ljn:#7a4f9e;
-    --ljn-soft:#e9e0f1;
+    --seguro:#2563c9;
+    --seguro-soft:#dbe7f8;
+    --mapleleaf:#e0661a;
+    --mapleleaf-soft:#fbe4d3;
+    --toa:#17924f;
+    --toa-soft:#d6f0e0;
+    --ljn:#a02ec0;
+    --ljn-soft:#f1dbf6;
     --shadow: 0 1px 2px rgba(28,36,48,0.06), 0 6px 20px -8px rgba(28,36,48,0.12);
   }
   @media (prefers-color-scheme: dark){
@@ -38,23 +38,23 @@
       --faint:#767d88;
       --line:#2b2f35;
       --line-strong:#3a3f47;
-      --accent:#d38257;
-      --accent-ink:#1b120b;
-      --accent-soft:#3a2a1e;
+      --accent:#e9e7e0;
+      --accent-ink:#14171b;
+      --accent-soft:#2a2f36;
       --good:#5cb98a;
       --good-soft:#1c2f26;
       --warn:#d1a13a;
       --warn-soft:#332a12;
       --crit:#e08074;
       --crit-soft:#3a1f1c;
-      --seguro:#8fb3cc;
-      --seguro-soft:#232d34;
-      --mapleleaf:#cba374;
-      --mapleleaf-soft:#2f271c;
-      --toa:#5fc2a6;
-      --toa-soft:#1c2f29;
-      --ljn:#b99ad8;
-      --ljn-soft:#2a2234;
+      --seguro:#6ba5ff;
+      --seguro-soft:#1c2a42;
+      --mapleleaf:#ff9b52;
+      --mapleleaf-soft:#3d2615;
+      --toa:#4cd388;
+      --toa-soft:#15301f;
+      --ljn:#dd8cf2;
+      --ljn-soft:#2e1d37;
       --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 8px 24px -8px rgba(0,0,0,0.5);
     }
   }
@@ -75,14 +75,14 @@
     --warn-soft:#332a12;
     --crit:#e08074;
     --crit-soft:#3a1f1c;
-    --seguro:#8fb3cc;
-    --seguro-soft:#232d34;
-    --mapleleaf:#cba374;
-    --mapleleaf-soft:#2f271c;
-      --toa:#5fc2a6;
-      --toa-soft:#1c2f29;
-      --ljn:#b99ad8;
-      --ljn-soft:#2a2234;
+    --seguro:#6ba5ff;
+    --seguro-soft:#1c2a42;
+    --mapleleaf:#ff9b52;
+    --mapleleaf-soft:#3d2615;
+      --toa:#4cd388;
+      --toa-soft:#15301f;
+      --ljn:#dd8cf2;
+      --ljn-soft:#2e1d37;
     --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 8px 24px -8px rgba(0,0,0,0.5);
   }
 
@@ -150,7 +150,7 @@
   .bars{padding:9px 14px 9px 4px;}
   .barline{display:flex;align-items:center;gap:8px;margin-bottom:4px;}
   .barline:last-child{margin-bottom:0;}
-  .barline .who{width:64px;flex:none;font-size:10.5px;color:var(--faint);text-align:right;font-weight:600;}
+  .barline .who{width:72px;flex:none;font-size:10.5px;color:var(--faint);text-align:right;font-weight:600;}
   .barline .track{flex:1;background:var(--bg);border-radius:4px;height:9px;overflow:hidden;}
   .barline .fill{height:100%;border-radius:4px;}
   .fill.seguro{background:var(--seguro);}
@@ -250,6 +250,28 @@
   .flagform{background:var(--bg);border:1px solid var(--line-strong);border-radius:8px;padding:10px;margin:4px 0 10px;}
   .flagform textarea{width:100%;min-height:56px;font-family:inherit;font-size:12.5px;padding:7px 9px;border:1px solid var(--line-strong);border-radius:6px;background:var(--paper);color:var(--ink);resize:vertical;}
   .flagform .fexclude{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);margin:8px 0 2px;}
+
+  /* bid summaries */
+  .bidcards{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,520px),1fr));gap:18px;}
+  .bidcard{background:var(--paper);border:1px solid var(--line);border-top-width:6px;border-radius:12px;padding:18px 20px 20px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:14px;}
+  .bidcard h3{margin:0;font-size:18px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+  .bidcard .contact{font-size:11.5px;color:var(--faint);margin-top:2px;}
+  .bidcard .headline{font-size:13.5px;color:var(--ink);line-height:1.5;}
+  table.bidtotals{width:100%;border-collapse:collapse;font-size:12.5px;}
+  table.bidtotals th{text-align:right;font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--faint);font-weight:600;padding:0 0 6px 8px;border-bottom:1px solid var(--line);}
+  table.bidtotals th:first-child{text-align:left;padding-left:0;}
+  table.bidtotals td{padding:6px 0 6px 8px;border-bottom:1px solid var(--line);text-align:right;font-family:'IBM Plex Mono',monospace;font-variant-numeric:tabular-nums;}
+  table.bidtotals td:first-child{text-align:left;padding-left:0;font-family:'IBM Plex Sans',sans-serif;}
+  table.bidtotals tr.hh td{font-weight:700;}
+  .bidcols{display:grid;grid-template-columns:1fr;gap:12px;}
+  .bidlist h4{margin:0 0 4px;font-size:11px;text-transform:uppercase;letter-spacing:.06em;font-weight:700;}
+  .bidlist ul{margin:0;padding-left:18px;font-size:12.8px;color:var(--muted);display:flex;flex-direction:column;gap:3px;}
+  .bidlist.good h4{color:var(--good);}
+  .bidlist.watch h4{color:var(--warn);}
+  .bidlist.ask h4{color:var(--ink);}
+  .household{background:var(--bg);border-radius:8px;padding:10px 12px;font-size:12.8px;color:var(--muted);display:flex;flex-direction:column;gap:6px;}
+  .household b{color:var(--ink);}
+  .household .hname{font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;font-weight:700;color:var(--faint);}
 
   footer{margin-top:40px;padding-top:16px;border-top:1px solid var(--line);font-size:11.5px;color:var(--faint);}
   @media (max-width:640px){
@@ -819,6 +841,89 @@ const BENCH = [
 // ---------------------------------------------------------------------
 // State
 // ---------------------------------------------------------------------
+// ---------------------------------------------------------------------
+// Per-contractor summaries, written for the Kemp and Burke households
+// ---------------------------------------------------------------------
+const BID_NOTES = [
+  {match:/toa/i,
+   headline:'The most detailed bid: priced against the dovetail plans dated 7/30/26, with allowances and exclusions spelled out. About $313,000, roughly a third of the price, is allowances that get reconciled by change order, so the total can move either way.',
+   good:[
+     'Cites the plan set and spec behind each price, which makes it the easiest bid to audit line by line.',
+     'Its ADU site and foundation number ($136,400) is within about 3% of LJ Nelson’s, which supports both.',
+     'Plumbing ($94,530) lines up with LJ Nelson’s, and roofing carries a six-year workmanship guarantee.',
+     'Price is held for 30 days from Oct 9, so through about Nov 8, 2026.'],
+   watch:[
+     'Leaves out permits and fees, temporary power and water, saw-cutting, and any duplex re-roof.',
+     'Raising both garage floors is an option (+$13,000) that is not in the total; the grand total is left blank until options are chosen.',
+     'Frameless cabinet allowance is the largest single line: $94,736.96 supply plus $12,000 install.',
+     'You supply plumbing fixtures, six vanities and hardware, and appliance installation is not included.',
+     'Subcontractor work carries a 15% markup, and scope is re-verified once structural plans exist, by change order.'],
+   ask:[
+     'Can the duplex roof and garage floor raise be quoted as add alternates?',
+     'What happens when allowances run over, and can any (electrical, cabinets) be converted to fixed prices?',
+     'Which garage gets the one new door, and is the outdoor shower wanted at 2535?'],
+   david:'Cabinets $43,948 plus half of the $12,000 install; kitchen countertop $9,667.48 with the backsplash tiled separately. This side holds the only new garage window (Window K).',
+   alex:'Cabinets $50,788.96 and a $11,468.95 countertop with a 20-inch backsplash. No outdoor shower is priced anywhere in Toa’s bid, and the new garage door is assumed to be on this side.',
+   adu:'Led by concrete at $133,400 and framing at $59,775. One 24,000 BTU wall-mount HVAC unit instead of two mini splits, and a $34,500 stucco allowance.'},
+  {match:/nelson/i,
+   headline:'Itemized in numbered lines with labor and material split out, and broader than Toa on scope: appliance re-installs, final clean, shower glass and tree removal are all in. Its cover letter calls it a "preliminary, ballpark figure" and several lines are still TBD.',
+   good:[
+     'Prices almost every trade, including $3,375 of appliance removal and reinstall and a $1,800 final clean.',
+     'Includes French drain, wall waterproofing, backfill and tree removal at the ADU retaining wall.',
+     'Only bid that includes sales tax ($5,408.08), so its total is closer to a real out-of-pocket number.',
+     'Lowest whole-project total of the two newer bids at $808,666.'],
+   watch:[
+     'No California license number is shown and the phone number is 303 (Colorado). Verify at cslb.ca.gov before going further.',
+     'Cabinet lines 8.1 ($23,600) and 8.2 ($26,200) may be alternatives, not both, and painting the cabinets is a separate $19,200 TBD allowance.',
+     'Counts bathroom accessories and ADU door and window installation twice, and ADU vanity install ($6,000) dwarfs materials ($1,300).',
+     'ADU framing labor ($11,759) is under a third of Toa’s, and $32,500 of electrical for three buildings looks light against Toa’s $62,206.',
+     'No payment schedule, exclusions list, garage floor raise or duplex HVAC ducting in the document.'],
+   ask:[
+     'License number, insurance and a written exclusions list.',
+     'Are 8.1 and 8.2 one choice or two kitchens, and what does cabinet paint (TBD) actually cover?',
+     'Does the $32,500 electrical include the two 200A panels and meters listed at $15,625?'],
+   david:'Countertops $6,175 plus backsplash tile $9,087.50 and $2,926 of wainscotting in the existing bath. The new refrigerator is called out for removal and reinstall.',
+   alex:'Countertops and backsplash $15,312.50 on two slabs. Wainscotting for the new bathroom is $0 (TBD), so this side will likely grow.',
+   adu:'Concrete $100,000 and site work $32,369 including tree removal. Framing at $24,259 looks low. Two mini splits ($17,875), IKEA kitchenette and prefab vanities.'},
+  {match:/seguro/i,
+   headline:'Lowest-looking totals but the least complete: Painting, Tile and Flooring are unpriced on both duplex bids, and the ADU shows cabinetry, glazing and appliances at $0. Dated Sept 10, before Toa and LJ Nelson.',
+   good:[
+     'Gives a low and high range per scope (for example ADU $453,688 to $635,163), showing how much uncertainty it carries.',
+     'Only bid that prices the outdoor shower at 2535 and that treats the two duplex sides differently.',
+     'Folds the garage floor raise into its framing line.'],
+   watch:[
+     'Missing trades will add real money; Maple Leaf’s numbers for the same trades are about $71,540 per duplex side.',
+     'No overhead and profit line is shown. Ask whether markup is already inside its unit prices.',
+     '2537 still counts a $22,112.80 pony wall and beam line that is out of scope.',
+     'ADU site and foundation at $55,020 is far below the newer bids ($132,000 to $136,000).',
+     'Prices a duplex re-roof ($15,720 per side) that Toa excludes entirely.'],
+   ask:[
+     'Please price painting, tile, flooring and the ADU cabinetry so the total is complete.',
+     'Is markup included, and what is the final number after it?',
+     'Remove the Kitchen + Living Room Integration line from 2537.'],
+   david:'$22,112.80 of the 2537 total is the pony wall and beam line that is no longer in scope. Painting, tile and flooring are not priced.',
+   alex:'Includes the outdoor shower (about $17,000 across plumbing and condenser relocation) that no other bid prices. No tile, paint or flooring yet.',
+   adu:'Two mini splits at $22,204.50 and electrical at $48,902, with cabinetry, glazing, hardware, paint, tile and appliances all $0.'},
+  {match:/maple/i,
+   headline:'Prices every trade and shows overhead, profit and liability openly, but the numbers read like templates: identical proposals for 2537 and 2535, the same $31,970 electrical on all three, and the highest total of the four bids.',
+   good:[
+     'Only early bid with every trade priced and markup (13% overhead and profit, 2% liability) shown.',
+     'Clear structure that is easy to compare line by line.'],
+   watch:[
+     '$31,970 electrical and $3,500 gutters repeat on all three proposals: $95,910 of electrical against $32,500 to $62,206 from the newer bids.',
+     '2535 and 2537 match to the penny, with no outdoor shower and no structural wall work.',
+     'ADU site work plus concrete is $178,000, about $42,000 to $46,000 above the newer bids.',
+     'Two half-roof charges ($18,000) plus $4,500 more roof work at the east house look like overlap.',
+     '"Repaint main house ($20,000)" is listed but unpriced and outside the total.'],
+   ask:[
+     'A real electrical takeoff for each building.',
+     'Soils quantities and wall dimensions behind the $178,000 ADU site and concrete number.',
+     'Was a second site walk done at 2535, and is the gutter charge really three separate runs?'],
+   david:'$322,693, of which $42,090 is overhead, profit and liability. Kitchen cabinets, vanities and countertops total $48,500.',
+   alex:'Identical to 2537 at $322,693, so nothing here reflects the outdoor shower or any 2535-specific work.',
+   adu:'$665,041, of which $86,744 is overhead, profit and liability. The highest ADU number of the four.'},
+];
+
 let estimates = SEED.slice();
 let annotations = {};   // iid -> {note, exclude, ts}
 let expanded = {};      // "propKey|catKey" -> true when a category row is expanded
@@ -894,7 +999,7 @@ function renderTabs(){
   const nav = document.getElementById('tabs');
   nav.innerHTML = Object.keys(PROPERTIES).map(key=>{
     return `<button data-tab="${key}" class="${key===activeTab?'active':''}">${PROPERTIES[key].label}</button>`;
-  }).join('') + `<button data-tab="benchmarks" class="${activeTab==='benchmarks'?'active':''}">Benchmarks</button>` +
+  }).join('') + `<button data-tab="bids" class="${activeTab==='bids'?'active':''}">Bid Summaries</button>` + `<button data-tab="benchmarks" class="${activeTab==='benchmarks'?'active':''}">Benchmarks</button>` +
               `<button data-tab="manage" class="${activeTab==='manage'?'active':''}">Estimates &amp; Add New</button>`;
   nav.querySelectorAll('button').forEach(b=>b.addEventListener('click', ()=>{ activeTab=b.dataset.tab; render(); }));
 }
@@ -916,7 +1021,7 @@ function renderPropertyView(propKey){
   html += '<div class="tiles">';
   list.forEach((e,i)=>{
     const adj = hasExclusions(e);
-    html += `<div class="tile"><div class="label"><span class="dot" style="background:var(--${colorFor(e.contractor,i)})"></span>${e.contractor} ${confPill(e)}</div><div class="value">${fmt(totalAdjusted(e))}${adj?` <small style="text-decoration:line-through">${fmt(total(e))}</small>`:''}${propKey==='all'?' <small>all 3</small>':''}</div><div class="foot">${adj?'adjusted for flagged items · ':''}dated ${e.date}</div></div>`;
+    html += `<div class="tile" style="border-top:4px solid var(--${colorFor(e.contractor,i)})"><div class="label" style="color:var(--${colorFor(e.contractor,i)})"><span class="dot" style="background:var(--${colorFor(e.contractor,i)})"></span>${e.contractor} ${confPill(e)}</div><div class="value">${fmt(totalAdjusted(e))}${adj?` <small style="text-decoration:line-through">${fmt(total(e))}</small>`:''}${propKey==='all'?' <small>all 3</small>':''}</div><div class="foot">${adj?'adjusted for flagged items · ':''}dated ${e.date}</div></div>`;
   });
   if(list.length>=2){
     const tots = list.map(e=>totalAdjusted(e));
@@ -943,7 +1048,7 @@ function renderPropertyView(propKey){
     const usedCats = CATS.filter(c => list.some(e => e.items.some(it=>it.cat===c.key)));
     html += `<h3 class="section-title">Category breakdown</h3>`;
     html += `<div class="legend">${contractors.map((c,i)=>`<span><i style="background:var(--${colorFor(c,i)})"></i>${c}</span>`).join('')}<span><i style="background:var(--warn)"></i>unpriced / placeholder</span><span>🚩 flag a line item that looks wrong</span></div>`;
-    html += `<table class="catable"><thead><tr><th>Category</th>${list.map(e=>`<th class="num">${e.contractor.split(' ')[0]}</th>`).join('')}<th style="width:30%">Relative spend</th><th style="width:26px"></th></tr></thead><tbody>`;
+    html += `<table class="catable"><thead><tr><th>Category</th>${list.map((e,i)=>`<th class="num" style="color:var(--${colorFor(e.contractor,i)});border-bottom:3px solid var(--${colorFor(e.contractor,i)})">${e.contractor.split(' ')[0]==='LJ'?'LJ Nelson':e.contractor.split(' ')[0]}</th>`).join('')}<th style="width:30%">Relative spend</th><th style="width:26px"></th></tr></thead><tbody>`;
     usedCats.forEach(c=>{
       const vals = list.map((e,i)=>catTotals[i][c.key]||0);
       const max = Math.max(...vals, 1);
@@ -960,7 +1065,7 @@ function renderPropertyView(propKey){
       list.forEach((e,i)=>{
         const v = catTotals[i][c.key]||0;
         const pct = max ? Math.max((v/max*100),(v>0?4:0)) : 0;
-        html += `<div class="barline"><span class="who">${e.contractor.split(' ')[0]}</span><div class="track"><div class="fill ${colorFor(e.contractor,i)}" style="width:${pct}%"></div></div></div>`;
+        html += `<div class="barline"><span class="who" style="color:var(--${colorFor(e.contractor,i)})">${e.contractor.split(' ')[0]==='LJ'?'LJ Nelson':e.contractor.split(' ')[0]}</span><div class="track"><div class="fill ${colorFor(e.contractor,i)}" style="width:${pct}%"></div></div></div>`;
       });
       html += `</td>`;
       html += `<td><button class="expandbtn" data-expkey="${expKey}" title="Show individual line items">${isOpen?'▾':'▸'}</button></td></tr>`;
@@ -1023,6 +1128,46 @@ function renderPropertyView(propKey){
     html += `</div>`;
   }
 
+  return html;
+}
+
+function renderBids(){
+  const names = [];
+  estimates.forEach(e=>{ if(!names.includes(e.contractor)) names.push(e.contractor); });
+  const noteFor = n => BID_NOTES.find(b=>b.match.test(n));
+  names.sort((a,b)=>{
+    const ia = BID_NOTES.findIndex(x=>x.match.test(a)), ib = BID_NOTES.findIndex(x=>x.match.test(b));
+    return (ia<0?99:ia)-(ib<0?99:ib);
+  });
+  let html = `<div class="prop-head"><h2>Bid summaries</h2><div class="scope">One card per contractor, written for the two households. David &amp; Erin are 2537, Alex &amp; Jimena are 2535, and the ADU is shared, so each household’s all-in number is its own side plus half the ADU.</div></div><div class="bidcards">`;
+  names.forEach((name,ci)=>{
+    const ests = estimates.filter(e=>e.contractor===name);
+    const note = noteFor(name);
+    const col = colorFor(name, ci);
+    const t = {};
+    ests.forEach(e=>{ t[e.property] = (t[e.property]||0) + totalAdjusted(e); });
+    const have = p => p in t;
+    const whole = Object.values(t).reduce((a,b)=>a+b,0);
+    const aduHalf = (t.adu||0)/2;
+    const first = ests[0];
+    html += `<div class="bidcard" style="border-top-color:var(--${col})"><div><h3 style="color:var(--${col})">${name} ${confPill(first)}</h3><div class="contact">${first.contact||''} · dated ${first.date}</div></div>`;
+    if(note) html += `<div class="headline">${note.headline}</div>`;
+    html += `<table class="bidtotals"><thead><tr><th></th><th>Total</th></tr></thead><tbody>
+      <tr><td>2537 Treasure Dr (David &amp; Erin)</td><td>${have('2537')?fmt(t['2537']):'—'}</td></tr>
+      <tr><td>2535 Treasure Dr (Alex &amp; Jimena)</td><td>${have('2535')?fmt(t['2535']):'—'}</td></tr>
+      <tr><td>ADU (shared)</td><td>${have('adu')?fmt(t.adu):'—'}</td></tr>
+      <tr class="hh"><td>David &amp; Erin all-in (2537 + ½ ADU)</td><td>${have('2537')?fmt(t['2537']+aduHalf):'—'}</td></tr>
+      <tr class="hh"><td>Alex &amp; Jimena all-in (2535 + ½ ADU)</td><td>${have('2535')?fmt(t['2535']+aduHalf):'—'}</td></tr>
+      <tr><td>Whole project</td><td>${fmt(whole)}</td></tr></tbody></table>`;
+    if(note){
+      html += `<div class="household"><div><div class="hname">For David &amp; Erin (2537)</div>${note.david}</div><div><div class="hname">For Alex &amp; Jimena (2535)</div>${note.alex}</div><div><div class="hname">For the shared ADU</div>${note.adu}</div></div>`;
+      html += `<div class="bidcols"><div class="bidlist good"><h4>In its favor</h4><ul>${note.good.map(x=>`<li>${x}</li>`).join('')}</ul></div><div class="bidlist watch"><h4>Watch for</h4><ul>${note.watch.map(x=>`<li>${x}</li>`).join('')}</ul></div><div class="bidlist ask"><h4>Ask them</h4><ul>${note.ask.map(x=>`<li>${x}</li>`).join('')}</ul></div></div>`;
+    } else {
+      html += `<div class="household">No written summary yet for this contractor. Its numbers appear in every comparison tab.</div>`;
+    }
+    html += `</div>`;
+  });
+  html += `</div><div class="disclaimer" style="margin-top:16px">Totals follow any line items you have flagged as out of scope. Toa and LJ Nelson quoted one combined project, so their per-property totals depend on how shared lines were split (see the footer).</div>`;
   return html;
 }
 
@@ -1181,7 +1326,8 @@ function render(){
   renderTabs();
   const views = document.getElementById('views');
   let html = '';
-  if(activeTab==='benchmarks') html = renderBenchmarks();
+  if(activeTab==='bids') html = renderBids();
+  else if(activeTab==='benchmarks') html = renderBenchmarks();
   else if(activeTab==='manage') html = renderManage();
   else html = renderPropertyView(activeTab);
   views.innerHTML = `<section class="view active">${html}</section>`;
