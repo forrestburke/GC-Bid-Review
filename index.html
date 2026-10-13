@@ -23,6 +23,10 @@
     --seguro-soft:#dfe7ec;
     --mapleleaf:#7a5230;
     --mapleleaf-soft:#ece1d3;
+    --toa:#237a63;
+    --toa-soft:#dbece6;
+    --ljn:#7a4f9e;
+    --ljn-soft:#e9e0f1;
     --shadow: 0 1px 2px rgba(28,36,48,0.06), 0 6px 20px -8px rgba(28,36,48,0.12);
   }
   @media (prefers-color-scheme: dark){
@@ -47,6 +51,10 @@
       --seguro-soft:#232d34;
       --mapleleaf:#cba374;
       --mapleleaf-soft:#2f271c;
+      --toa:#5fc2a6;
+      --toa-soft:#1c2f29;
+      --ljn:#b99ad8;
+      --ljn-soft:#2a2234;
       --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 8px 24px -8px rgba(0,0,0,0.5);
     }
   }
@@ -71,6 +79,10 @@
     --seguro-soft:#232d34;
     --mapleleaf:#cba374;
     --mapleleaf-soft:#2f271c;
+      --toa:#5fc2a6;
+      --toa-soft:#1c2f29;
+      --ljn:#b99ad8;
+      --ljn-soft:#2a2234;
     --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 8px 24px -8px rgba(0,0,0,0.5);
   }
 
@@ -143,6 +155,12 @@
   .barline .fill{height:100%;border-radius:4px;}
   .fill.seguro{background:var(--seguro);}
   .fill.mapleleaf{background:var(--mapleleaf);}
+  .fill.toa{background:var(--toa);}
+  .fill.ljn{background:var(--ljn);}
+  .conf-pill{font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;padding:1px 6px;border-radius:20px;background:var(--good-soft);color:var(--good);white-space:nowrap;}
+  .conf-pill.prelim{background:var(--bg);color:var(--faint);border:1px solid var(--line);}
+  .filterbar{display:flex;align-items:center;gap:10px;font-size:12.5px;color:var(--muted);margin:0 0 16px;flex-wrap:wrap;}
+  .filterbar label{display:inline-flex;align-items:center;gap:6px;cursor:pointer;color:var(--ink);font-weight:600;}
   tr.totalrow td{border-top:2px solid var(--ink);border-bottom:none;padding-top:12px;font-weight:700;font-size:14.5px;}
   tr.flagrow td{padding-top:2px;padding-bottom:14px;border-bottom:1px solid var(--line);}
   .inline-flag{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;padding:2px 8px;border-radius:20px;margin-top:2px;}
@@ -259,7 +277,7 @@
   <div id="views"></div>
 
   <footer>
-    Figures are transcribed from the scope/budget PDFs supplied by Seguro Construction (Lic. 909481) and Maple Leaf Construction (CLN 960826), dated Sept 9–10, 2026. Santa Barbara market ranges in the Benchmarks tab are general industry guidance, not quotes — confirm against 2–3 current local bids before relying on them for negotiation. Click ▸ on any category row to see its individual line items and flag one with 🚩 — flags and added estimates are stored with this page and visible to everyone who opens the link.
+    Figures are transcribed from the proposals supplied by Toa Construction (Lic. 971342, Oct 9, 2026), LJ Nelson Construction (Sept 23, 2026), Seguro Construction (Lic. 909481) and Maple Leaf Construction (CLN 960826), the last two dated Sept 9–10, 2026. Toa and LJ Nelson quoted the whole project in one document, so their lines are split across 2537, 2535 and the ADU: lines the bid names for one unit go to that unit, combined duplex lines are divided evenly, and whole-project lines are spread pro rata by direct cost. Santa Barbara market ranges in the Benchmarks tab are general industry guidance, not quotes — confirm against 2–3 current local bids before relying on them for negotiation. Click ▸ on any category row to see its individual line items and flag one with 🚩 — flags and added estimates are stored with this page and visible to everyone who opens the link.
   </footer>
 </div>
 
@@ -290,6 +308,7 @@ const CATS = [
   {key:'appliances',  label:'Appliances',                   code:'11400'},
   {key:'pm',          label:'Project Management',           code:'40000'},
   {key:'ohp',         label:'Overhead, Profit &amp; Liability', code:'—'},
+  {key:'tax',         label:'Sales Tax',                    code:'—'},
 ];
 const CATMAP = Object.fromEntries(CATS.map(c=>[c.key,c]));
 
@@ -311,7 +330,7 @@ function mkItems(estId, rows){
   return rows.map((r,i)=>({iid:estId+'#'+i, cat:r[0], label:r[1], amt:r[2]}));
 }
 
-const SEED = [
+const SEED_PRELIM = [
   {id:'seed-seguro-2537', property:'2537', contractor:'Seguro Construction', contact:'todd@seguroconstruction.com · Lic. 909481', date:'2026-09-10', source:'seed',
     items: mkItems('seed-seguro-2537', [
       ['general','Temporary Facilities and Maintenance',8462.60],
@@ -472,11 +491,284 @@ const SEED = [
     note:'Lists "Repaint main house ($20,000)" inside the ADU scope with no dollar amount entered and NOT included in the $665,040.58 total — a likely future change order, not yet priced or agreed.'},
 ];
 
+// BEGIN-BIDS
+// Toa and LJ Nelson each quoted the whole project in one document. Rows are
+// [category, label, amount, to] where `to` is a property key, 'duplex' (split
+// evenly between 2537 and 2535), 'all' (spread by each property's direct cost),
+// or an explicit {prop: amount} split.
+const PROPS3 = ['2537','2535','adu'];
+const r2 = x => Math.round(x*100)/100;
+
+function buildBid(slug, meta, rows, notes){
+  const direct = {'2537':0,'2535':0,'adu':0};
+  const share = [];
+  const pending = [];
+  rows.forEach((row,idx)=>{
+    const [cat,label,amt,to] = row;
+    if(to==='all'){ pending.push(idx); return; }
+    let parts;
+    if(to==='duplex') parts = {'2537':amt/2, '2535':amt/2};
+    else if(typeof to==='object') parts = to;
+    else parts = {[to]:amt};
+    const suffix = to==='duplex' ? ' · ½ of combined duplex line' : '';
+    Object.keys(parts).forEach(p=>{ direct[p] += parts[p]; });
+    share[idx] = {cat, label:label+suffix, parts};
+  });
+  const dsum = PROPS3.reduce((a,p)=>a+direct[p],0);
+  pending.forEach(idx=>{
+    const [cat,label,amt] = rows[idx];
+    const parts = {};
+    PROPS3.slice(0,2).forEach(p=>{ parts[p] = r2(amt*direct[p]/dsum); });
+    parts.adu = r2(amt - parts['2537'] - parts['2535']);
+    share[idx] = {cat, label:label+' · allocated pro rata', parts};
+  });
+  return PROPS3.map(p=>{
+    const id = 'seed-'+slug+'-'+p;
+    const items = [];
+    rows.forEach((row,idx)=>{
+      const s = share[idx];
+      if(!(p in s.parts)) return;
+      items.push({iid:id+'#'+items.length, cat:s.cat, label:s.label, amt:r2(s.parts[p])});
+    });
+    return Object.assign({id, property:p, source:'seed', items, note:notes[p]||''}, meta);
+  });
+}
+
+const TOA_ROWS = [
+  ['general','Containment',3000,'all'],
+  ['demo','Demolition (2 bathrooms, 2 kitchens, garage windows, ADU retaining wall)',15520,'all'],
+  ['demo','Demolition trash removal',1000,'all'],
+  ['concrete','Concrete – 130 lf footings, 500 sf slab, 110 lf CMU wall with redwood fence',133400,'adu'],
+  ['site','Trenching allowance – ADU through duplex to street for sewer and water',3000,'adu'],
+  ['framing','ADU framing (materials $21,275 + labor $38,500)',59775,'adu'],
+  ['framing','Duplex framing (new bath and laundry walls, skylight openings)',11000,'duplex'],
+  ['general','Special engineering inspections',1500,'all'],
+  ['plumbing','Plumbing – ADU',30820,'adu'],
+  ['plumbing','Plumbing – duplex',63710,'duplex'],
+  ['electrical','Electrical allowance – new 200A panel w/ 3 meters, ADU sub-panel, ADU, duplex',62205.69,'all'],
+  ['hvac','HVAC allowance – duplex (dryer, bath fan and hood ducting)',2850,'duplex'],
+  ['hvac','HVAC allowance – ADU (24k BTU ductless wall mount)',14375,'adu'],
+  ['general','HERS energy testing (Title 24)',3000,'all'],
+  ['insulation','Insulation (duplex garage common wall + ADU)',5727,'all'],
+  ['drywall','Drywall – duplex and ADU',56982.50,'all'],
+  ['windows','Exterior door supply – D202 garage door (assumed 2535 side)',981.54,'2535'],
+  ['windows','Exterior door supply – ADU D101/D102 French doors',7142.75,'adu'],
+  ['windows','Door pans – duplex garage door (assumed 2535 side)',326,'2535'],
+  ['windows','Door pans – ADU French doors',652,'adu'],
+  ['windows','Interior door supply allowance – duplex (bath doors + laundry bifolds)',1668.02,'duplex'],
+  ['windows','Interior door supply allowance – ADU',1772.83,'adu'],
+  ['windows','Door installation – duplex interior doors',3500,'duplex'],
+  ['windows','Door installation – duplex exterior door (assumed 2535 side)',700,'2535'],
+  ['windows','Door installation – ADU interior and French doors',3900,'adu'],
+  ['windows','Window supply – Window K, 2537 garage',807.47,'2537'],
+  ['windows','Window supply – ADU (10 Milgard V300 windows)',9422.87,'adu'],
+  ['windows','Window installation – Window K, 2537 garage',700,'2537'],
+  ['windows','Window installation – ADU (10 windows)',7000,'adu'],
+  ['windows','Door and window delivery',350,'all'],
+  ['windows','Skylight supply allowance (6 fixed skylights)',6955.29,'duplex'],
+  ['windows','Skylight installation (6)',1920,'duplex'],
+  ['exterior','Stucco allowance – full ADU exterior + duplex garage patching',34500,'all'],
+  ['roofing','Roofing – ADU only (duplex re-roof excluded)',12420,'adu'],
+  ['roofing','Gutters – ADU',937.25,'adu'],
+  ['roofing','Fascia – ADU',2400,'adu'],
+  ['tile','Tile supply allowance ($17.25/sf + 15% waste) – duplex',19003.84,'duplex'],
+  ['tile','Tile supply allowance – ADU',1299.41,'adu'],
+  ['tile','Tile installation – ADU (2 bath floors, kitchen splash)',4600,'adu'],
+  ['tile','Tile installation – Bath 2 ×2 (new baths: showers, floors, wainscot)',28175,'duplex'],
+  ['tile','Tile installation – Bath 1 ×2 (remodeled baths: tub surround, floors)',26450,'duplex'],
+  ['tile','Tile installation – kitchen and dining floors and splash',12650,'duplex'],
+  ['tile','Prefab shower bases and surrounds allowance – ADU (2)',3300,'adu'],
+  ['tile','Shower and tub glass allowance – duplex (4 enclosures)',10000,'duplex'],
+  ['flooring','LVL floating flooring allowance – ADU living/hall/bedroom + duplex garages',10726.05,'all'],
+  ['cabinetry','Cabinetry supply allowance – 2535 (Residence A)',50788.96,'2535'],
+  ['cabinetry','Cabinetry supply allowance – 2537 (Residence B)',43948.00,'2537'],
+  ['cabinetry','Cabinetry installation allowance – duplex',12000,'duplex'],
+  ['cabinetry','ADU kitchenette cabinetry supply allowance (IKEA)',4500,'adu'],
+  ['cabinetry','ADU kitchenette cabinetry install allowance',4000,'adu'],
+  ['cabinetry','Vanity install – duplex (4 client-supplied floating vanities)',2400,'duplex'],
+  ['cabinetry','Vanity install – ADU (2 client-supplied vanities)',900,'adu'],
+  ['cabinetry','Countertops – 2535 kitchen (2 slabs, 20" backsplash)',11468.95,'2535'],
+  ['cabinetry','Countertops – 2537 kitchen (2 slabs, no backsplash)',9667.48,'2537'],
+  ['cabinetry','Countertops – ADU kitchenette',4549.40,'adu'],
+  ['framing','Fine carpentry – baseboards and casings',6800,'all'],
+  ['paint','Paint – duplex interiors',26996.25,'duplex'],
+  ['paint','Paint – duplex new fascia',3162.50,'duplex'],
+  ['paint','Paint – ADU interior',7212.51,'adu'],
+  ['paint','Paint – ADU stucco, fascia and eaves',11137.75,'adu'],
+  ['framing','Miscellaneous installs – duplex accessories (16 items)',1600,'duplex'],
+  ['framing','Miscellaneous installs – ADU accessories (10 items)',1000,'adu'],
+  ['general','Portable restroom rental (10 months)',1535.83,'all'],
+  ['general','Trash removal',3000,'all'],
+  ['pm','Site coordination (200 hrs over 40 weeks)',22000,'all'],
+  ['general','General conditions / general labor',5500,'all'],
+  ['pm','Construction contract administration (includes overhead)',10400,'all'],
+];
+
+const LJN_ROWS = [
+  ['general','General liability insurance',1200,'all'],
+  ['general','Protection',3000,'all'],
+  ['general','Temporary toilet',1125,'all'],
+  ['general','Disposal, roll-off and hauling',1200,'all'],
+  ['general','General laborer / clean up',4062.50,'all'],
+  ['general','Perimeter fence',993.75,'all'],
+  ['general','Demolition and safety supplies',1250,'all'],
+  ['general','Mobilization',1875,'all'],
+  ['demo','Demo per plans',38750,'all'],
+  ['site','New French drain at concrete wall',2950,'adu'],
+  ['site','Waterproofing retaining wall (liquid applied)',5275,'adu'],
+  ['site','Backfill and compaction',8225,'adu'],
+  ['site','Excavate for retaining wall footings',2325,'adu'],
+  ['site','Excavate for new foundation',1700,'adu'],
+  ['site','Trench for power and sewer',8500,'adu'],
+  ['site','Remove approx. 12 trees at back retaining wall',3393.75,'adu'],
+  ['concrete','New foundation at ADU',37500,'adu'],
+  ['concrete','New pavers between ADU and duplex (not priced)',0,'adu'],
+  ['concrete','Concrete retaining wall (rebar, footings, labor)',62500,'adu'],
+  ['framing','ADU framing (labor)',11758.75,'adu'],
+  ['framing','ADU framing materials',12500,'adu'],
+  ['framing','Skylight framing',6800,'duplex'],
+  ['framing','Duplex – frame new door and window at garage',912.50,'duplex'],
+  ['framing','Duplex – frame new laundry and bath walls',1950,'duplex'],
+  ['cabinetry','Paint-grade kitchen cabinets (8.1)',23600,'duplex'],
+  ['cabinetry','Partial paint / partial stain-grade kitchen cabinets (8.2)',26200,'duplex'],
+  ['exterior','ADU – waterproof exterior walls with Tyvek stucco wrap',4050,'adu'],
+  ['drywall','ADU – drywall walls and ceiling',8437.50,'adu'],
+  ['drywall','ADU – green board at bathrooms',1150,'adu'],
+  ['exterior','ADU – stucco',28750,'adu'],
+  ['exterior','Duplex – stucco patching (new window, door, water heaters)',3750,'duplex'],
+  ['drywall','Duplex – drywall patching throughout',6250,'duplex'],
+  ['drywall','Duplex – drywall garages',10080,'duplex'],
+  ['drywall','Duplex – 4 bathrooms green board',9266,'duplex'],
+  ['hvac','ADU – condenser unit and 2 mini splits',17875,'adu'],
+  ['cabinetry','2537 (David & Erin) – countertop installation',2275,'2537'],
+  ['cabinetry','2537 (David & Erin) – countertop material',3900,'2537'],
+  ['cabinetry','2535 (Alex & Jimena) – countertops and backsplash installation',4812.50,'2535'],
+  ['cabinetry','2535 (Alex & Jimena) – countertop and backsplash material, 2 slabs',10500,'2535'],
+  ['cabinetry','Duplex – bathroom countertops ×4 installation',1575,'duplex'],
+  ['cabinetry','Duplex – bathroom countertops ×4 materials',2500,'duplex'],
+  ['paint','ADU – paint all walls, ceilings and baseboards',7325,'adu'],
+  ['paint','ADU – paint exterior to match existing',6075,'adu'],
+  ['paint','ADU – interior doors',1875,'adu'],
+  ['paint','Duplex – paint garages, bathrooms, kitchen walls and ceilings, trim',11640,'duplex'],
+  ['paint','Duplex – interior doors',3125,'duplex'],
+  ['paint','Duplex – paint all kitchen cabinets (TBD allowance)',19200,'duplex'],
+  ['appliances','Remove and re-install stoves',1312.50,'duplex'],
+  ['appliances','Remove and reinstall refrigerators (2537 new fridge)',1312.50,'duplex'],
+  ['appliances','Remove and reinstall dishwashers',750,'duplex'],
+  ['tile','Duplex – porcelain flooring installation, both kitchens',18000,'duplex'],
+  ['tile','Duplex – kitchen floor porcelain material ($10/sf allowance)',4614,'duplex'],
+  ['tile','2537 – kitchen backsplash tile installation',6562.50,'2537'],
+  ['tile','2537 – backsplash tile material ($25/sf allowance)',2525,'2537'],
+  ['tile','2535 – kitchen backsplash (priced under countertops)',0,'2535'],
+  ['tile','Duplex – tile 4 bathroom floors and 4 shower floors, installation',6656.25,'duplex'],
+  ['tile','Duplex – floor and shower floor tile material ($25/sf allowance)',3500,'duplex'],
+  ['tile','Duplex – shower wall tile installation, 4 bathrooms',12468.75,'duplex'],
+  ['tile','Duplex – shower wall material ($30/sf allowance)',5782,'duplex'],
+  ['tile','ADU – bathroom insert installation',1700,'adu'],
+  ['tile','ADU – bathroom shower inserts ×2',11800,'adu'],
+  ['tile','ADU – floor tile installation',2531.25,'adu'],
+  ['tile','ADU – bathroom floor tile ($10/sf)',682,'adu'],
+  ['tile','ADU – kitchen backsplash',1030,'adu'],
+  ['tile','ADU – kitchen backsplash material ($10/sf)',151,'adu'],
+  ['tile','2537 – existing bathroom wainscotting installation',2520,'2537'],
+  ['tile','2537 – existing bathroom wainscotting material ($10/sf)',406,'2537'],
+  ['tile','2535 – new bathroom wainscotting installation (TBD)',0,'2535'],
+  ['tile','2535 – new bathroom wainscotting material (TBD)',0,'2535'],
+  ['electrical','All new electrical per plans',16875,'all'],
+  ['electrical','Duplex – (2) 200-amp main panels and meters + (1) 100-amp panel',15625,'all'],
+  ['flooring','ADU – LVP flooring and installation',3681.25,'adu'],
+  ['flooring','Duplex – tie in existing wood flooring (TBD)',1800,'duplex'],
+  ['plumbing','ADU and duplex – all rough plumbing',32812.50,'all'],
+  ['plumbing','ADU and duplex – finished plumbing for 6 bathrooms',18750,{'2537':6250,'2535':6250,'adu':6250}],
+  ['plumbing','ADU – new 50-gal Rheem heat pump water heater',6250,'adu'],
+  ['plumbing','ADU – new water line',3125,'adu'],
+  ['plumbing','ADU – new sewer line',3750,'adu'],
+  ['plumbing','ADU – new gas line',3125,'adu'],
+  ['plumbing','ADU – 2 new toilets',480,'adu'],
+  ['plumbing','ADU – all bathroom plumbing fixtures',1310,'adu'],
+  ['plumbing','Duplex – two tankless water heaters, installation and materials',12500,'duplex'],
+  ['plumbing','Duplex – 4 new wall-mounted toilets',960,'duplex'],
+  ['plumbing','Duplex – plumbing fixtures for 4 bathrooms',8000,'duplex'],
+  ['plumbing','Duplex – bathroom accessories for 4 bathrooms',1600,'duplex'],
+  ['plumbing','Duplex – new alcove tubs (2)',4800,'duplex'],
+  ['tile','Duplex – shower glass, 4 bathrooms',6250,'duplex'],
+  ['windows','ADU – windows A–J',11000,'adu'],
+  ['windows','ADU – doors 101 and 102 (French doors)',8750,'adu'],
+  ['windows','ADU – doors 103–105',2437.50,'adu'],
+  ['windows','Duplex – Window K (2537 garage)',1368,'2537'],
+  ['windows','Duplex – 6 skylights including flashing kits',5250,'duplex'],
+  ['windows','Duplex – doors 200, 201, 202, 300, 301 and 302',4000,'duplex'],
+  ['windows','Delivery of all windows and doors',2500,'all'],
+  ['roofing','New roof at ADU and duplex',23750,'all'],
+  ['roofing','New gutters at ADU',3750,'adu'],
+  ['insulation','ADU – insulation for ceiling and walls',6875,'adu'],
+  ['insulation','Duplex – garage insulation for ceiling and walls',2250,'duplex'],
+  ['windows','ADU – installation of all exterior windows and doors (22.1)',5000,'adu'],
+  ['windows','ADU – installation of all interior doors',1912.50,'adu'],
+  ['framing','ADU – door hardware for 3 doors incl. installation',985,'adu'],
+  ['cabinetry','ADU – 2 prefab vanities with integrated countertop and sink: installation',6000,'adu'],
+  ['cabinetry','ADU – 2 prefab vanities with integrated countertop and sink: materials',1300,'adu'],
+  ['framing','ADU – baseboards throughout (installation)',2550,'adu'],
+  ['framing','ADU – baseboard material',1120,'adu'],
+  ['framing','ADU – baseboard material delivery fee',187.50,'adu'],
+  ['windows','ADU – installation of all doors and windows incl. trim (22.9)',4250,'adu'],
+  ['windows','ADU – window and door trim materials',1500,'adu'],
+  ['framing','ADU – install bathroom accessories',637.50,'adu'],
+  ['framing','ADU – bathroom accessory materials',525,'adu'],
+  ['cabinetry','ADU – kitchenette installation',2550,'adu'],
+  ['cabinetry','ADU – IKEA kitchenette (basic sink, faucet, laminate countertop, hardware)',3015,'adu'],
+  ['framing','ADU – loft handrail installation',1275,'adu'],
+  ['framing','ADU – loft handrail materials',2622,'adu'],
+  ['windows','ADU – door pan installation',212.50,'adu'],
+  ['windows','ADU – door pan materials',1250,'adu'],
+  ['roofing','ADU – rain barrels installation',850,'adu'],
+  ['roofing','ADU – rain barrels materials (Bushman spec)',6556,'adu'],
+  ['framing','Duplex – baseboard installation',3400,'duplex'],
+  ['framing','Duplex – baseboard material',1540,'duplex'],
+  ['windows','Duplex – door, window, trim and hardware installation',1700,'duplex'],
+  ['windows','Duplex – door, window, hardware and trim materials',2950,'duplex'],
+  ['framing','Duplex – frame 4 bathroom niches',2550,'duplex'],
+  ['framing','Duplex – bathroom accessories installation (22.26)',1275,'duplex'],
+  ['framing','Duplex – bathroom accessories for 4 bathrooms (22.27)',1575,'duplex'],
+  ['windows','Duplex – skylight installation',2550,'duplex'],
+  ['framing','Duplex – garage closets incl. doors, installation',2490,'duplex'],
+  ['framing','Duplex – garage closets incl. doors, materials',5245,'duplex'],
+  ['general','Final clean (includes windows)',1800,'all'],
+  ['tax','Sales tax',5408.08,'all'],
+];
+
+const TOA_META = {contractor:'Toa Construction', contact:'Gus Duncan · Lic. 971342 · Gus@ToaConstruction.com', date:'2026-10-09', conf:'high'};
+const LJN_META = {contractor:'LJ Nelson Construction', contact:'admin@ljnelsonconstruction.com · (303) 359-3575 · no CA license # shown', date:'2026-09-23', conf:'high'};
+const TOA_SCOPE = 'One combined proposal against the dovetail plans dated 7/30/26. Lines Toa did not split between the two duplex units are divided evenly; whole-project lines are allocated pro rata by direct cost. Excludes permits and fees, any duplex re-roof, the duplex garage floor raise (option +$13,000), client-supplied fixtures and vanities, and temporary power and water.';
+const LJN_SCOPE = 'One combined quote; its cover letter calls it a "preliminary, ballpark figure". Lines not split between the two duplex units are divided evenly; whole-project lines are allocated pro rata by direct cost. Total includes $5,408.08 sales tax.';
+
+const NEW_BIDS = [].concat(
+  buildBid('toa', TOA_META, TOA_ROWS, {
+    '2537':TOA_SCOPE+' 2537 holds the only new garage window (Window K).',
+    '2535':TOA_SCOPE+' The single new garage door is assumed to be on this side — confirm against the plans.',
+    'adu':TOA_SCOPE+' ADU concrete ($133,400) and framing ($59,775) are the two largest ADU lines.'}),
+  buildBid('ljnelson', LJN_META, LJN_ROWS, {
+    '2537':LJN_SCOPE+' Backsplash tile and existing-bath wainscotting are priced for this side only.',
+    '2535':LJN_SCOPE+' Backsplash is bundled into the countertop line, and new-bathroom wainscotting is still $0 (TBD).',
+    'adu':LJN_SCOPE+' Includes removing about 12 trees at the back retaining wall ($3,393.75) and $6,556 of rain barrels.'})
+);
+// END-BIDS
+
+const SEED = NEW_BIDS.concat(SEED_PRELIM.map(e=>Object.assign({conf:'prelim'}, e)));
+
 // ---------------------------------------------------------------------
 // Hand-authored flags (grounded in the numbers above)
 // ---------------------------------------------------------------------
 const FLAGS = {
   all: [
+    {sev:'info', title:'Toa and LJ Nelson are treated as the more accurate bids', body:'Whole-project totals: <b>Toa $926,693.14</b> (before permits and the unselected options, e.g. +$13,000 to raise both garage floors) and <b>LJ Nelson $808,666.33</b> (includes $5,408.08 sales tax; its cover letter still calls it a "preliminary, ballpark figure"). Seguro and Maple Leaf were earlier budgets, so the older flags below that compare only those two should be read with that in mind. Use the checkbox above to hide them.'},
+    {sev:'crit', title:'Electrical: the newer bids put all three buildings at $33k–$62k, not $96k', body:'Toa: <b>$62,205.69</b> for everything, including a new 200A panel with three meters and the ADU sub-panel. LJ Nelson: <b>$32,500</b> for everything. Maple Leaf charges $31,970 on each of its three proposals (<b>$95,910</b> total) and Seguro totals <b>$83,853.10</b>. LJ’s whole-project number is roughly what Maple Leaf charges for a single building, which supports the earlier read that Maple Leaf’s electrical was repeated three times.'},
+    {sev:'crit', title:'Whether the duplex gets a new roof differs by bid', body:'Toa prices roofing at the <b>ADU only</b> ($12,420) and says it includes no roof scope at the duplex. Seguro prices a new roof on each duplex side ($15,720 each) plus the ADU, Maple Leaf prices half a roof per side, and LJ Nelson has one $23,750 line for "ADU and duplex". Decide the duplex roof scope first or these totals can’t be compared.'},
+    {sev:'warn', title:'Garage floor raise is missing from both newer bids', body:'Toa leaves it out and offers it as Option FR1 (<b>+$13,000</b> for both garages). LJ Nelson has no line for it. Seguro includes raising the garage floor inside its framing line and Maple Leaf has a $10,000 leveling slab per side, so add roughly $13k–$20k to Toa and LJ for a like-for-like comparison.'},
+    {sev:'warn', title:'Cabinetry is priced three different ways', body:'Toa: <b>$106,736.96</b> for both kitchens plus bathroom storage (frameless plywood boxes, $94,736.96 supply + $12,000 install). LJ Nelson: <b>$49,800</b>, but its two lines are "paint grade" ($23,600) and "partial stain" ($26,200) and may be alternatives rather than one per kitchen — if so the real figure is about half. Maple Leaf: $77,000 across both sides including vanities. Ask each for the same spec.'},
+    {sev:'warn', title:'LJ Nelson counts some items twice', body:'Duplex bathroom accessories appear under Plumbing ($1,600) and again under Carpentry ($1,275 install + $1,575 materials). ADU door and window installation appears at 22.1 ($5,000) and again at 22.9 ($4,250 "incl. trim"). ADU vanity installation is $6,000 against $1,300 of materials (Toa installs the same two vanities for $900). Flag them with 🚩 once you’ve confirmed with LJ Nelson.'},
+    {sev:'info', title:'Plumbing is the one trade where the newer bids agree', body:'Toa <b>$94,530</b> vs LJ Nelson <b>$97,462.50</b>, about 3% apart, against Seguro $104,407 and Maple Leaf $135,400.'},
+    {sev:'info', title:'Check LJ Nelson’s license; note what Toa leaves to you', body:'LJ Nelson’s quote shows no California license number and a 303 (Colorado) phone number — verify the license at cslb.ca.gov before going further. Toa excludes permits and fees, temporary power and water, client-supplied plumbing fixtures, six vanities and appliance installation, so its number will grow.'},
     {sev:'crit', title:'Same $31,970 electrical figure, three separate scopes', body:'Maple Leaf’s electrical allowance is <b>exactly $31,970.00</b> on all three of its proposals — 2537, 2535, and the ADU — despite those being a duplex-side rewire, a second duplex-side rewire, and an entirely new ADU electrical system (sub-panel, 26 recessed lights, 20 outlets, a dedicated cooktop circuit, Edison coordination). Real takeoffs don’t land on the identical number three times. Ask Maple Leaf for a scope-specific electrical breakdown for each building before treating any of the three figures as reliable.'},
     {sev:'warn', title:'2535 and 2537 quoted identically by Maple Leaf', body:'Maple Leaf’s proposals for 2535 and 2537 match to the penny across all 17 cost categories — same $322,692.76 total, same $16,540 paint, same $10,792.40 supervision fee. Plausible for a true mirror-image duplex, but worth confirming a second, unit-specific site walk actually happened rather than one estimate being copied for the other.'},
     {sev:'warn', title:'Gutters/downspout billed three separate times', body:'Maple Leaf charges "Gutters and down spout to match house" at $3,500 in the 2537 bid, $3,500 in the 2535 bid, and $3,500 again in the ADU bid ($10,500 total). Reasonable if each is a genuinely separate run of new gutter, but confirm linear footage per building rather than a flat per-job fee being applied three times.'},
@@ -484,19 +776,28 @@ const FLAGS = {
     {sev:'info', title:'No separate Overhead &amp; Profit line from Seguro', body:'Maple Leaf explicitly breaks out Overhead &amp; Profit (13%) and Liability (2%) as line items on every proposal. Seguro’s documents show no equivalent line at all. Ask Seguro in writing whether markup is already folded into their unit prices — otherwise a double-digit percentage could appear later as a change order.'},
   ],
   '2537': [
+    {sev:'info', title:'The pony wall / beam work appears only in Seguro’s 2537 bid', body:'Neither Toa nor LJ Nelson has a line for removing the pony wall or adding a beam, which matches it being out of scope. Seguro’s $22,112.80 "Kitchen + Living Room Integration" line is still counted in its 2537 total — expand Framing & Carpentry and flag it as excluded to see the adjusted number.'},
+    {sev:'info', title:'Toa and LJ Nelson split this side’s costs differently', body:'Toa prices 2537’s cabinets at $43,948 and kitchen countertops at $9,667.48 with tile backsplash priced elsewhere. LJ Nelson prices 2537’s countertops at $6,175 and its backsplash tile separately at $9,087.50. Both newer bids price one new garage window at 2537 (Window K).'},
     {sev:'warn', title:'Electrical: Maple Leaf runs 83% above Seguro', body:'Maple Leaf: <b>$31,970</b> vs Seguro: <b>$17,475.40</b> for the same panel upgrade + kitchen/bath/garage lighting scope. Combined with the portfolio-wide flag that Maple Leaf’s $31,970 repeats verbatim across all three of its bids, this number is the one most worth re-quoting from a third electrician before signing either contract.'},
     {sev:'info', title:'Cabinetry cost is bundled, not broken out, in Seguro’s bid', body:'Seguro folds "purchase and install new kitchen cabinets" and "purchase and install new bathroom vanity" into its $38,330.60 Framing & Carpentry line without a separate dollar figure, while Maple Leaf itemizes cabinetry + vanities + countertops at $48,500. Ask Seguro for the cabinet/vanity portion specifically so the two bids can be compared trade-for-trade.'},
     {sev:'info', title:'Unpriced scope inflates the apples-to-apples gap', body:'Seguro’s $179,597.73 total omits Painting, Tile, and Flooring entirely. Adding Maple Leaf’s pricing for those same trades (~$71,540) as a placeholder brings an adjusted Seguro estimate to roughly <b>$251,000</b>, versus Maple Leaf’s fully-scoped <b>$322,692.76</b> — still lower, but a $71k narrower gap than the headline totals suggest.'},
   ],
   '2535': [
+    {sev:'warn', title:'Toa’s single new garage door is assumed to be on this side', body:'Toa prices one new exterior garage door (D202, $981.54 supply, $700 install, $326 door pan) and one new garage window (Window K, at 2537) for the whole duplex. I placed the door at 2535 — confirm which garage it belongs to on the plans. Seguro prices new garage doors and openings on both sides, so check whether the plans call for one door or two.'},
+    {sev:'warn', title:'LJ Nelson still has 2535 wainscotting at $0 (TBD)', body:'Lines 14.18 and 14.19, wainscotting for Alex and Jimena’s new bathroom, are both $0 and marked TBD, and the backsplash is bundled into the $15,312.50 countertop line. Expect this side to grow once those are priced.'},
     {sev:'crit', title:'"Kitchen + Living Room Integration" missing from this bid', body:'Seguro’s 2537 estimate includes a $22,112.80 line for demoing the pony wall between kitchen and living room, shoring the ceiling, and installing a new exposed beam on new footings. That scope does not appear anywhere in the 2535 estimate. Confirm against the construction plans whether both units get this structural opening — if so, the 2535 number is understated by roughly $22k.'},
     {sev:'warn', title:'Electrical: Maple Leaf runs 83% above Seguro', body:'Same gap as 2537 — Maple Leaf $31,970 vs Seguro $17,475.40 — and the same portfolio-wide placeholder-number concern applies.'},
     {sev:'info', title:'Unpriced scope inflates the apples-to-apples gap', body:'Seguro’s $175,936.28 total also omits Painting, Tile, and Flooring. Adding Maple Leaf’s pricing for those trades (~$71,540) brings an adjusted Seguro estimate to roughly <b>$247,500</b> against Maple Leaf’s <b>$322,692.76</b>.'},
   ],
   adu: [
+    {sev:'crit', title:'The two newer bids agree on site and foundation work, and bracket the older ones', body:'Toa: Concrete <b>$133,400</b> + trenching <b>$3,000</b> = <b>$136,400</b>. LJ Nelson: Concrete/Hardscape <b>$100,000</b> + Site Work <b>$32,368.75</b> = <b>$132,368.75</b>. That is about 3% apart, against Seguro at $55,020 (likely too low) and Maple Leaf at $178,000 (likely too high). Toa’s trenching is only a $3,000 allowance and excludes backfill, compaction and saw-cutting, while LJ includes $8,500 of trenching plus $8,225 of backfill.'},
+    {sev:'warn', title:'ADU framing: LJ Nelson is far below Toa', body:'Toa: <b>$59,775</b> ($21,275 materials + $38,500 labor). LJ Nelson: <b>$24,258.75</b> ($12,500 materials + $11,758.75 labor). Seguro $44,802 and Maple Leaf $30,000. LJ’s labor is under a third of Toa’s, so its framing is the likeliest place for a later change order.'},
+    {sev:'warn', title:'HVAC and roof scopes don’t line up', body:'Toa prices one 24,000 BTU wall-mount unit ($14,375 allowance) while LJ Nelson, Seguro and Maple Leaf price a condenser with two mini splits ($17,875, $22,204.50, $34,780). For the roof, Toa includes ADU shingles, gutters and fascia ($15,757.25) while LJ’s $23,750 roof line covers ADU and duplex together and its rain barrels add $7,406.'},
+    {sev:'warn', title:'LJ Nelson removes about 12 trees; Seguro plans tree protection', body:'LJ’s Site Work includes removing roughly 12 trees at the back retaining wall ($3,393.75). Seguro’s ADU bid lists "tree protection zones (required per City of SB)". Confirm which is true and whether City tree rules or permits apply before either number is relied on.'},
+    {sev:'info', title:'The ADU has a kitchenette, so $13k–$14k of cabinetry is plausible', body:'Toa prices the IKEA kitchenette, 2 vanity installs and its countertop at $13,949.40, LJ Nelson at about $12,865 for the kitchenette and vanities. That replaces the earlier concern that a full kitchen was underpriced; Seguro’s $0 is still a placeholder.'},
     {sev:'crit', title:'Site work + concrete: Maple Leaf is $123,000 higher', body:'Seguro prices Grading/Trenching + Concrete/Foundation (incl. the new retaining wall) at $16,375 + $38,645 = <b>$55,020</b>. Maple Leaf prices Site Work + Concrete at $115,000 + $63,000 = <b>$178,000</b> — over 3x Seguro’s number and the single largest dollar gap anywhere in the ADU comparison. Ask Maple Leaf for the soils-driven quantities behind this: cubic yards of over-excavation, retaining wall linear footage/height, and export truck loads.'},
     {sev:'crit', title:'Electrical is lower here, despite being the biggest electrical scope', body:'Maple Leaf’s ADU electrical figure ($31,970) is actually <i>less</i> than Seguro’s ($48,902.30) — the opposite of the pattern on the duplex sides — even though the ADU scope (new sub-panel, 26 can lights, 20 outlets, dedicated cooktop circuit) is larger than either duplex unit’s rewire. Combined with that same $31,970 appearing on both smaller duplex jobs, this is the clearest evidence the Maple Leaf electrical number is a stock placeholder rather than an ADU-specific takeoff.'},
-    {sev:'crit', title:'Cabinetry is essentially unpriced on both bids', body:'Seguro prices the ADU’s kitchen cabinets + 2 bathroom vanities at <b>$0</b> (placeholder). Maple Leaf prices kitchen cabinets + 2 vanities + countertops at just <b>$14,000</b> combined. A fully cabineted kitchen and two bathroom vanities in Santa Barbara commonly run well above that — see Benchmarks. This is likely the single biggest budget gap in the whole ADU scope and needs real vendor quotes before either contract is signed.'},
+    {sev:'info', title:'Earlier bids: Seguro’s ADU cabinetry is a $0 placeholder', body:'Seguro prices the ADU’s kitchen cabinets and 2 vanities at <b>$0</b>; Maple Leaf prices cabinets, vanities and countertops at <b>$14,000</b>. Toa and LJ Nelson both price an IKEA kitchenette and prefab vanities in the same $13k–$14k range, so Maple Leaf looks reasonable and Seguro still needs a number.'},
     {sev:'warn', title:'Possible roof double-count on the existing house', body:'Maple Leaf’s two duplex bids already charge $9,000 each ($18,000 combined) for "1/2 of new roof" on the existing house. The ADU proposal separately adds "Roof work at E house — $4,500." Confirm this $4,500 is genuinely additional roof scope (not already covered by the two half-roof charges) before approving it.'},
     {sev:'warn', title:'"Repaint main house ($20,000)" listed but not priced or totaled', body:'This line sits inside Maple Leaf’s ADU proposal with no dollar figure entered and is excluded from the $665,040.58 total. Get it formally priced and added to the contract now, or explicitly removed from scope — items like this are exactly what turn into unplanned change orders mid-project.'},
   ],
@@ -550,9 +851,26 @@ function isUnpriced(est, catKey){
   return rows.length>0 && rows.every(it=>(Number(it.amt)||0)===0);
 }
 
+let onlyHigh = false;
+
 function estimatesFor(prop){
-  if(prop==='all') return estimates;
-  return estimates.filter(e=>e.property===prop);
+  const base = prop==='all' ? estimates : estimates.filter(e=>e.property===prop);
+  return onlyHigh ? base.filter(e=>e.conf==='high') : base;
+}
+
+// For the All Properties tab: one combined column per contractor.
+function combinedFor(list){
+  const out = [];
+  list.forEach(e=>{
+    let c = out.find(x=>x.contractor===e.contractor);
+    if(!c){ c = {id:'combined-'+e.contractor, contractor:e.contractor, conf:e.conf, date:e.date, items:[]}; out.push(c); }
+    e.items.forEach(it=>c.items.push(Object.assign({}, it, {label:'['+PROPERTIES[e.property].label.replace(' Treasure Dr','')+'] '+it.label})));
+  });
+  return out;
+}
+
+function confPill(e){
+  return e.conf==='high' ? '<span class="conf-pill">More accurate</span>' : (e.conf==='prelim' ? '<span class="conf-pill prelim">Early budget</span>' : '');
 }
 
 function contractorsIn(list){
@@ -564,6 +882,8 @@ function contractorsIn(list){
 function colorFor(contractor, idx){
   if(/seguro/i.test(contractor)) return 'seguro';
   if(/maple/i.test(contractor)) return 'mapleleaf';
+  if(/toa/i.test(contractor)) return 'toa';
+  if(/nelson/i.test(contractor)) return 'ljn';
   return idx%2===0 ? 'seguro' : 'mapleleaf';
 }
 
@@ -584,33 +904,27 @@ function renderTabs(){
 // ---------------------------------------------------------------------
 function renderPropertyView(propKey){
   const meta = PROPERTIES[propKey];
-  const list = estimatesFor(propKey);
+  const origList = estimatesFor(propKey);
+  const list = propKey==='all' ? combinedFor(origList) : origList;
   const contractors = contractorsIn(list);
 
   let html = `<div class="prop-head"><h2>${meta.label}</h2><div class="addr">${meta.addr}</div><div class="scope">${meta.scope}</div></div>`;
 
+  html += `<div class="filterbar"><label><input type="checkbox" id="onlyHigh" ${onlyHigh?'checked':''}> Show only the more accurate bids (Toa, LJ Nelson)</label><span>Seguro and Maple Leaf were earlier, rougher budgets.</span></div>`;
+
   // stat tiles
   html += '<div class="tiles">';
-  if(propKey==='all'){
-    const grand = {};
-    list.forEach(e=>{ grand[e.contractor] = (grand[e.contractor]||0) + totalAdjusted(e); });
-    Object.keys(grand).forEach((c,i)=>{
-      html += `<div class="tile"><div class="label"><span class="dot" style="background:var(--${colorFor(c,i)})"></span>${c}</div><div class="value">${fmt(grand[c])} <small>combined</small></div><div class="foot">${list.filter(e=>e.contractor===c).length} estimate(s) on file</div></div>`;
-    });
-    html += `<div class="tile"><div class="label">Estimates on file</div><div class="value">${list.length}</div><div class="foot">across all three scopes</div></div>`;
-  } else {
-    list.forEach((e,i)=>{
-      const adj = hasExclusions(e);
-      html += `<div class="tile"><div class="label"><span class="dot" style="background:var(--${colorFor(e.contractor,i)})"></span>${e.contractor}</div><div class="value">${fmt(totalAdjusted(e))}${adj?` <small style="text-decoration:line-through">${fmt(total(e))}</small>`:''}</div><div class="foot">${adj?'adjusted for flagged items · ':''}dated ${e.date}</div></div>`;
-    });
-    if(list.length===2){
-      const diff = totalAdjusted(list[1]) - totalAdjusted(list[0]);
-      const pct = (Math.abs(diff)/totalAdjusted(list[0])*100).toFixed(0);
-      html += `<div class="tile delta"><div class="label">Spread</div><div class="value ${diff>0?'pos':'neg'}">${diff>0?'+':'−'}${fmt(Math.abs(diff))}</div><div class="foot">${pct}% between the two bids</div></div>`;
-    }
-    const flagCount = (FLAGS[propKey]||[]).length + list.reduce((n,e)=>n+e.items.filter(it=>annotations[it.iid]).length,0);
-    html += `<div class="tile"><div class="label">Flags raised</div><div class="value">${flagCount}</div><div class="foot">see below</div></div>`;
+  list.forEach((e,i)=>{
+    const adj = hasExclusions(e);
+    html += `<div class="tile"><div class="label"><span class="dot" style="background:var(--${colorFor(e.contractor,i)})"></span>${e.contractor} ${confPill(e)}</div><div class="value">${fmt(totalAdjusted(e))}${adj?` <small style="text-decoration:line-through">${fmt(total(e))}</small>`:''}${propKey==='all'?' <small>all 3</small>':''}</div><div class="foot">${adj?'adjusted for flagged items · ':''}dated ${e.date}</div></div>`;
+  });
+  if(list.length>=2){
+    const tots = list.map(e=>totalAdjusted(e));
+    const lo = Math.min(...tots), hi = Math.max(...tots);
+    html += `<div class="tile delta"><div class="label">Spread, low to high</div><div class="value pos">${fmt(hi-lo)}</div><div class="foot">${fmt(lo)} to ${fmt(hi)} · ${((hi-lo)/lo*100).toFixed(0)}% apart</div></div>`;
   }
+  const flagCount = (FLAGS[propKey]||[]).length + origList.reduce((n,e)=>n+e.items.filter(it=>annotations[it.iid]).length,0);
+  html += `<div class="tile"><div class="label">Flags raised</div><div class="value">${flagCount}</div><div class="foot">see below</div></div>`;
   html += '</div>';
 
   // ADU sqft calculator
@@ -700,7 +1014,7 @@ function renderPropertyView(propKey){
   }
 
   // per-estimate notes
-  const withNotes = list.filter(e=>e.note);
+  const withNotes = propKey==='all' ? [] : list.filter(e=>e.note);
   if(withNotes.length){
     html += `<h3 class="section-title">Scope notes</h3><div class="flags">`;
     withNotes.forEach(e=>{
@@ -749,7 +1063,7 @@ function renderManage(){
   html += `<h3 class="section-title">All estimates on file <span class="n">${estimates.length}</span></h3>`;
   html += `<div style="overflow-x:auto"><table class="registry"><thead><tr><th>Property</th><th>Contractor</th><th>Date</th><th class="num">Total</th><th>Source</th><th></th></tr></thead><tbody>`;
   estimates.forEach(e=>{
-    html += `<tr><td>${PROPERTIES[e.property].label}</td><td>${e.contractor}<br><span style="color:var(--faint);font-size:11px">${e.contact||''}</span></td><td>${e.date}</td><td class="num">${fmt(total(e))}</td><td><span class="src-pill ${e.source==='added'?'added':''}">${e.source==='added'?'Added':'Original'}</span></td><td>${e.source==='added'?`<button class="del" data-id="${e.id}">Remove</button>`:''}</td></tr>`;
+    html += `<tr><td>${PROPERTIES[e.property].label}</td><td>${e.contractor} ${confPill(e)}<br><span style="color:var(--faint);font-size:11px">${e.contact||''}</span></td><td>${e.date}</td><td class="num">${fmt(total(e))}</td><td><span class="src-pill ${e.source==='added'?'added':''}">${e.source==='added'?'Added':'Original'}</span></td><td>${e.source==='added'?`<button class="del" data-id="${e.id}">Remove</button>`:''}</td></tr>`;
   });
   html += `</tbody></table></div>`;
   return html;
@@ -827,6 +1141,8 @@ async function clearAnnotation(iid){
 }
 
 function wireCategoryTable(){
+  const oh = document.getElementById('onlyHigh');
+  if(oh) oh.addEventListener('change', ()=>{ onlyHigh = oh.checked; openFlagForm = null; render(); });
   document.querySelectorAll('button.expandbtn').forEach(b=>{
     b.addEventListener('click', ()=>{
       const k = b.dataset.expkey;
