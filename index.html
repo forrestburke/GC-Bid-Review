@@ -1,3 +1,5 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Treasure Drive Bid Compare</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
@@ -122,10 +124,15 @@
   .prop-head .scope{font-size:12.5px;color:var(--faint);margin-top:6px;max-width:70ch;}
 
   /* stat tiles */
-  .tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;margin-bottom:22px;}
+  .tiles{display:grid;grid-template-columns:repeat(var(--cols,4),minmax(0,1fr));gap:12px;margin-bottom:22px;}
+  @media (max-width:760px){.tiles{grid-template-columns:repeat(2,minmax(0,1fr));}}
+  @media (max-width:420px){.tiles{grid-template-columns:minmax(0,1fr);}}
+  .conf-pill{margin-left:4px;}
   .tile{background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:14px 16px;box-shadow:var(--shadow);}
   .tile .label{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--faint);font-weight:600;margin-bottom:6px;display:flex;align-items:center;gap:6px;}
-  .tile .dot{width:8px;height:8px;border-radius:50%;display:inline-block;}
+  .tile .dot{width:8px;height:8px;border-radius:50%;display:inline-block;flex:none;margin-top:3px;}
+  .tile .label{align-items:flex-start;}
+  .tile .label .nm{display:inline;line-height:1.35;}
   .tile .value{font-size:22px;font-weight:600;font-family:'IBM Plex Mono',monospace;letter-spacing:-0.01em;}
   .tile .value small{font-size:12px;color:var(--faint);font-family:'IBM Plex Sans',sans-serif;font-weight:400;}
   .tile .foot{font-size:11.5px;color:var(--muted);margin-top:4px;}
@@ -134,20 +141,30 @@
 
   /* sqft box */
   .sqft-box{display:flex;align-items:center;gap:10px;background:var(--paper);border:1px dashed var(--line-strong);border-radius:10px;padding:10px 14px;margin-bottom:20px;font-size:13px;flex-wrap:wrap;}
-  .sqft-box input{width:90px;font-family:'IBM Plex Mono',monospace;font-size:13px;padding:4px 8px;border:1px solid var(--line-strong);border-radius:6px;background:var(--bg);color:var(--ink);}
+  .sqft-box input{width:110px;font-family:'IBM Plex Mono',monospace;font-size:13px;padding:4px 8px;border:1px solid var(--line-strong);border-radius:6px;background:var(--bg);color:var(--ink);}
   .sqft-box .out{font-family:'IBM Plex Mono',monospace;color:var(--ink);}
   .sqft-box .out b{color:var(--accent);}
 
   /* category comparison */
-  .catable{width:100%;border-collapse:collapse;margin-bottom:26px;}
+  .tablewrap{overflow-x:auto;margin-bottom:26px;max-width:100%;}
+  .catable{width:100%;min-width:760px;border-collapse:collapse;}
+  nav.tabs button{white-space:nowrap;}
+  @media (max-width:640px){
+    nav.tabs{overflow-x:auto;flex-wrap:nowrap;scrollbar-width:none;}
+    nav.tabs::-webkit-scrollbar{display:none;}
+    nav.tabs button{flex:none;}
+    header.top .meta{text-align:left;}
+    .wrap{padding:20px 14px 60px;}
+  }
   .catable th{text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--faint);font-weight:600;padding:0 0 8px;border-bottom:1px solid var(--line);}
-  .catable th.num,.catable td.num{text-align:right;}
+  .catable th.num,.catable td.num{text-align:right;padding-right:18px;}
+  .catable th.spend{padding-left:4px;}
   .catrow td{padding:9px 0;border-bottom:1px solid var(--line);vertical-align:top;}
   .catrow .catname{font-weight:600;font-size:13.5px;padding-right:14px;width:190px;}
   .catrow .catname code{display:block;font-size:10.5px;color:var(--faint);font-weight:400;margin-top:1px;}
   .catrow td.num{font-family:'IBM Plex Mono',monospace;font-size:13px;font-variant-numeric:tabular-nums;white-space:nowrap;width:110px;}
   .catrow td.num.zero{color:var(--faint);}
-  .bars{padding:9px 14px 9px 4px;}
+  .bars{padding:9px 22px 9px 4px;}
   .barline{display:flex;align-items:center;gap:8px;margin-bottom:4px;}
   .barline:last-child{margin-bottom:0;}
   .barline .who{width:72px;flex:none;font-size:10.5px;color:var(--faint);text-align:right;font-weight:600;}
@@ -275,6 +292,9 @@
 
   footer{margin-top:40px;padding-top:16px;border-top:1px solid var(--line);font-size:11.5px;color:var(--faint);}
   @media (max-width:640px){
+    .bench td.range{white-space:normal;}
+    .itemcols{grid-template-columns:1fr;padding:10px 4px;}
+    .bidcard{padding:14px 14px 16px;}
     .formgrid{grid-template-columns:1fr;}
     .lineitem{grid-template-columns:1fr;}
     .catrow .catname{width:auto;}
@@ -532,7 +552,7 @@ function buildBid(slug, meta, rows, notes){
     if(to==='duplex') parts = {'2537':amt/2, '2535':amt/2};
     else if(typeof to==='object') parts = to;
     else parts = {[to]:amt};
-    const suffix = to==='duplex' ? ' · ½ of combined duplex line' : '';
+    const suffix = to==='duplex' ? ' (½ duplex)' : '';
     Object.keys(parts).forEach(p=>{ direct[p] += parts[p]; });
     share[idx] = {cat, label:label+suffix, parts};
   });
@@ -542,7 +562,7 @@ function buildBid(slug, meta, rows, notes){
     const parts = {};
     PROPS3.slice(0,2).forEach(p=>{ parts[p] = r2(amt*direct[p]/dsum); });
     parts.adu = r2(amt - parts['2537'] - parts['2535']);
-    share[idx] = {cat, label:label+' · allocated pro rata', parts};
+    share[idx] = {cat, label:label+' (pro rata)', parts};
   });
   return PROPS3.map(p=>{
     const id = 'seed-'+slug+'-'+p;
@@ -997,7 +1017,7 @@ function colorFor(contractor, idx){
 // ---------------------------------------------------------------------
 function renderTabs(){
   const nav = document.getElementById('tabs');
-  nav.innerHTML = Object.keys(PROPERTIES).map(key=>{
+  nav.innerHTML = ['2537','2535','adu','all'].map(key=>{
     return `<button data-tab="${key}" class="${key===activeTab?'active':''}">${PROPERTIES[key].label}</button>`;
   }).join('') + `<button data-tab="bids" class="${activeTab==='bids'?'active':''}">Bid Summaries</button>` + `<button data-tab="benchmarks" class="${activeTab==='benchmarks'?'active':''}">Benchmarks</button>` +
               `<button data-tab="manage" class="${activeTab==='manage'?'active':''}">Estimates &amp; Add New</button>`;
@@ -1018,10 +1038,12 @@ function renderPropertyView(propKey){
   html += `<div class="filterbar"><label><input type="checkbox" id="onlyHigh" ${onlyHigh?'checked':''}> Show only the more accurate bids (Toa, LJ Nelson)</label><span>Seguro and Maple Leaf were earlier, rougher budgets.</span></div>`;
 
   // stat tiles
-  html += '<div class="tiles">';
+  const tileCount = list.length + (list.length>=2?1:0) + 1;
+  const cols = tileCount<=5 ? Math.max(tileCount,1) : (tileCount%3===0 ? 3 : 4);
+  html += `<div class="tiles" style="--cols:${cols}">`;
   list.forEach((e,i)=>{
     const adj = hasExclusions(e);
-    html += `<div class="tile" style="border-top:4px solid var(--${colorFor(e.contractor,i)})"><div class="label" style="color:var(--${colorFor(e.contractor,i)})"><span class="dot" style="background:var(--${colorFor(e.contractor,i)})"></span>${e.contractor} ${confPill(e)}</div><div class="value">${fmt(totalAdjusted(e))}${adj?` <small style="text-decoration:line-through">${fmt(total(e))}</small>`:''}${propKey==='all'?' <small>all 3</small>':''}</div><div class="foot">${adj?'adjusted for flagged items · ':''}dated ${e.date}</div></div>`;
+    html += `<div class="tile" style="border-top:4px solid var(--${colorFor(e.contractor,i)})"><div class="label" style="color:var(--${colorFor(e.contractor,i)})"><span class="dot" style="background:var(--${colorFor(e.contractor,i)})"></span><span class="nm">${e.contractor} ${confPill(e)}</span></div><div class="value">${fmt(totalAdjusted(e))}${adj?` <small style="text-decoration:line-through">${fmt(total(e))}</small>`:''}${propKey==='all'?' <small>all 3</small>':''}</div><div class="foot">${adj?'adjusted for flagged items · ':''}dated ${e.date}</div></div>`;
   });
   if(list.length>=2){
     const tots = list.map(e=>totalAdjusted(e));
@@ -1048,7 +1070,7 @@ function renderPropertyView(propKey){
     const usedCats = CATS.filter(c => list.some(e => e.items.some(it=>it.cat===c.key)));
     html += `<h3 class="section-title">Category breakdown</h3>`;
     html += `<div class="legend">${contractors.map((c,i)=>`<span><i style="background:var(--${colorFor(c,i)})"></i>${c}</span>`).join('')}<span><i style="background:var(--warn)"></i>unpriced / placeholder</span><span>🚩 flag a line item that looks wrong</span></div>`;
-    html += `<table class="catable"><thead><tr><th>Category</th>${list.map((e,i)=>`<th class="num" style="color:var(--${colorFor(e.contractor,i)});border-bottom:3px solid var(--${colorFor(e.contractor,i)})">${e.contractor.split(' ')[0]==='LJ'?'LJ Nelson':e.contractor.split(' ')[0]}</th>`).join('')}<th style="width:30%">Relative spend</th><th style="width:26px"></th></tr></thead><tbody>`;
+    html += `<div class="tablewrap"><table class="catable"><thead><tr><th>Category</th>${list.map((e,i)=>`<th class="num" style="color:var(--${colorFor(e.contractor,i)});border-bottom:3px solid var(--${colorFor(e.contractor,i)})">${e.contractor.split(' ')[0]==='LJ'?'LJ Nelson':e.contractor.split(' ')[0]}</th>`).join('')}<th class="spend" style="width:30%">Relative spend</th><th style="width:26px"></th></tr></thead><tbody>`;
     usedCats.forEach(c=>{
       const vals = list.map((e,i)=>catTotals[i][c.key]||0);
       const max = Math.max(...vals, 1);
@@ -1071,7 +1093,7 @@ function renderPropertyView(propKey){
       html += `<td><button class="expandbtn" data-expkey="${expKey}" title="Show individual line items">${isOpen?'▾':'▸'}</button></td></tr>`;
 
       if(isOpen){
-        html += `<tr class="detailrow"><td></td><td colspan="${list.length+2}"><div class="itemcols">`;
+        html += `<tr class="detailrow"><td colspan="${list.length+3}"><div class="itemcols">`;
         list.forEach((e,i)=>{
           const rows = itemsIn(e, c.key);
           html += `<div class="itemcol"><div class="itemcol-head" style="color:var(--${colorFor(e.contractor,i)})">${e.contractor}</div>`;
@@ -1103,7 +1125,7 @@ function renderPropertyView(propKey){
       }
     });
     html += `<tr class="totalrow"><td>Total${list.some(e=>hasExclusions(e))?' <span style="font-weight:400;font-size:11px;color:var(--faint)">(adjusted)</span>':''}</td>${list.map(e=>`<td class="num">${fmt(totalAdjusted(e))}${hasExclusions(e)?`<div style="font-weight:400;font-size:11px;color:var(--faint);text-decoration:line-through">${fmt(total(e))}</div>`:''}</td>`).join('')}<td></td><td></td></tr>`;
-    html += `</tbody></table>`;
+    html += `</tbody></table></div>`;
   } else {
     html += `<div class="disclaimer">No estimates loaded for this property yet. Add one from the "Estimates &amp; Add New" tab.</div>`;
   }
