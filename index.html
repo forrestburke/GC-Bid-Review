@@ -1066,7 +1066,10 @@ function tierSelect(){
 // Contractors the household has set aside; the finalists are the ones left showing.
 const FINALISTS = ['Toro Construction','LJ Nelson Construction'];
 let hidden = new Set();
-try{ const s = JSON.parse(localStorage.getItem('bidHidden')||'null'); if(Array.isArray(s)) hidden = new Set(s); }catch(e){}
+let savedChoice = false;
+try{ const s = JSON.parse(localStorage.getItem('bidHidden')||'null'); if(Array.isArray(s)){ hidden = new Set(s); savedChoice = true; } }catch(e){}
+// Default view: the two finalists only, until someone picks otherwise.
+if(!savedChoice) hidden = new Set(SEED.map(e=>e.contractor).filter(n=>!FINALISTS.includes(n)));
 
 function contractorNames(){
   const out = [];
