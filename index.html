@@ -297,6 +297,9 @@
   .bidlist.ctx{border-top:1px dashed var(--line-strong);padding-top:12px;}
   .bidlist.ctx h4{color:var(--faint);}
   .ctxpanel{margin-bottom:18px;}
+  table.commtable{width:100%;min-width:560px;border-collapse:collapse;font-size:12.5px;}
+  table.commtable th{text-align:left;font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--faint);font-weight:600;padding:0 10px 6px 0;border-bottom:1px solid var(--line);}
+  table.commtable td{padding:7px 10px 7px 0;border-bottom:1px solid var(--line);vertical-align:top;color:var(--muted);}
   .ctxpanel ul{margin:0;padding-left:18px;font-size:13px;color:var(--muted);display:flex;flex-direction:column;gap:5px;}
   .household{background:var(--bg);border-radius:8px;padding:10px 12px;font-size:12.8px;color:var(--muted);display:flex;flex-direction:column;gap:6px;}
   .household b{color:var(--ink);}
@@ -846,9 +849,6 @@ const FLAGS = {
   all: [
     {sev:'info', title:'Toa and LJ Nelson are treated as the more accurate bids', body:'Whole-project totals: <b>Toa $926,693.14</b> (before permits and the unselected options, e.g. +$13,000 to raise both garage floors) and <b>LJ Nelson $808,666.33</b> (includes $5,408.08 sales tax; its cover letter still calls it a "preliminary, ballpark figure"). Seguro and Maple Leaf were earlier budgets, so the older flags below that compare only those two should be read with that in mind. Use the checkbox above to hide them.'},
     {sev:'info', title:'Toro is a three-tier budget estimate, not an itemized bid', body:'Toro Construction (dated Sept 28, price expired Oct 13): <b>$895,000</b> Essential, <b>$975,000</b> Enhanced, <b>$1,075,000</b> Premium, each including a $55,000 garage allowance and excluding permits and appliances. Core construction is identical across tiers, so the spread is purely finishes; use the Toro tier menu above to switch. Enhanced is about $48,000 above Toa and $166,000 above LJ Nelson, but Toro’s lump sums can’t be matched to trades, so treat it as a check on the total rather than a line-by-line comparison.'},
-    {sev:'warn', title:'Two things you asked for are not clearly priced', body:'The emails to Toa asked for a wood ship ladder to the ADU attic and built-in dining seating. Toa explicitly excludes ladders to the attic and lists no dining seating. LJ Nelson lists a loft handrail but no ladder or seating, and Seguro priced an L-shaped dining nook at 2535 and then struck it out. Ask each bidder to confirm both are in.'},
-    {sev:'warn', title:'The plans are still changing, so expect change orders', body:'Toa priced from the 7/30/26 set and says scope must be re-verified against structural plans. Your design team was revising drawings Sep 15–16, Toa priced windows A and H as rectangles although the plans show custom shapes, and the back retaining wall height is not dimensioned (Toa’s concrete assumes a 4 ft wall with a 6 ft fence). Treat every bid as provisional until the revised plans are approved.'},
-    {sev:'info', title:'Price holds may lapse before permits', body:'Toa’s price is good for 30 days from Oct 9 (about Nov 8) and Toro’s expired Oct 13, but you told bidders permits by Thanksgiving and a December start, with City approval of the revised plans expected around mid-November. Ask for a price hold or a clear escalation clause; Toa also warns that tariffs may change material costs.'},
     {sev:'warn', title:'Skylight counts differ across bids', body:'Seguro prices 3, Toro 4 (final quantity still to be confirmed), and Toa and LJ Nelson price 6. Check the plan set; each skylight adds supply, framing, flashing and roofing work.'},
     {sev:'crit', title:'Electrical: the newer bids put all three buildings at $33k–$62k, not $96k', body:'Toa: <b>$62,205.69</b> for everything, including a new 200A panel with three meters and the ADU sub-panel. LJ Nelson: <b>$32,500</b> for everything. Maple Leaf charges $31,970 on each of its three proposals (<b>$95,910</b> total) and Seguro totals <b>$83,853.10</b>. LJ’s whole-project number is roughly what Maple Leaf charges for a single building, which supports the earlier read that Maple Leaf’s electrical was repeated three times.'},
     {sev:'crit', title:'Whether the duplex gets a new roof differs by bid', body:'Toa prices roofing at the <b>ADU only</b> ($12,420) and says it includes no roof scope at the duplex. Seguro prices a new roof on each duplex side ($15,720 each) plus the ADU, Maple Leaf prices half a roof per side, and LJ Nelson has one $23,750 line for "ADU and duplex". Toro carries only skylight-related roof repairs on the duplex. Decide the duplex roof scope first or these totals can’t be compared.'},
@@ -858,7 +858,7 @@ const FLAGS = {
     {sev:'info', title:'Plumbing is the one trade where the newer bids agree', body:'Toa <b>$94,530</b> vs LJ Nelson <b>$97,462.50</b>, about 3% apart, against Seguro $104,407 and Maple Leaf $135,400.'},
     {sev:'info', title:'Check LJ Nelson’s license; note what Toa leaves to you', body:'LJ Nelson’s quote shows no California license number and a 303 (Colorado) phone number — verify the license at cslb.ca.gov before going further. Toa excludes permits and fees, temporary power and water, client-supplied plumbing fixtures, six vanities and appliance installation, so its number will grow.'},
     {sev:'crit', title:'Same $31,970 electrical figure, three separate scopes', body:'Maple Leaf’s electrical allowance is <b>exactly $31,970.00</b> on all three of its proposals — 2537, 2535, and the ADU — despite those being a duplex-side rewire, a second duplex-side rewire, and an entirely new ADU electrical system (sub-panel, 26 recessed lights, 20 outlets, a dedicated cooktop circuit, Edison coordination). Real takeoffs don’t land on the identical number three times. Ask Maple Leaf for a scope-specific electrical breakdown for each building before treating any of the three figures as reliable.'},
-    {sev:'warn', title:'2535 and 2537 quoted identically by Maple Leaf', body:'Maple Leaf’s proposals for 2535 and 2537 match to the penny across all 17 cost categories — same $322,692.76 total, same $16,540 paint, same $10,792.40 supervision fee. Joshua explained on Sep 10 that he built the three estimates from a spreadsheet for an ADU he bid in the spring, removed a $153,147.06 "garage work" line that was identical on all three, and kept the other costs the same "for now" while he waits on subcontractors. So the repeated figures are placeholders, not takeoffs.'},
+    {sev:'warn', title:'2535 and 2537 quoted identically by Maple Leaf', body:'Maple Leaf’s proposals for 2535 and 2537 match to the penny across all 17 cost categories — same $322,692.76 total, same $16,540 paint, same $10,792.40 supervision fee. Plausible for a true mirror-image duplex, but worth confirming a second, unit-specific site walk actually happened rather than one estimate being copied for the other.'},
     {sev:'warn', title:'Gutters/downspout billed three separate times', body:'Maple Leaf charges "Gutters and down spout to match house" at $3,500 in the 2537 bid, $3,500 in the 2535 bid, and $3,500 again in the ADU bid ($10,500 total). Reasonable if each is a genuinely separate run of new gutter, but confirm linear footage per building rather than a flat per-job fee being applied three times.'},
     {sev:'info', title:'Seguro leaves Painting, Tile/Showers &amp; Flooring unpriced on both duplex units', body:'Seguro’s 2537 and 2535 estimates both show $0 (struck through) for Painting, Tile/Stone, and Flooring — those trades simply haven’t been bid yet. Maple Leaf’s otherwise-higher total already includes all three ($71,540 combined per side). A fair total-to-total comparison needs Seguro’s missing trades priced first — see the Benchmarks tab for rough fill-in numbers.'},
     {sev:'info', title:'No separate Overhead &amp; Profit line from Seguro', body:'Maple Leaf explicitly breaks out Overhead &amp; Profit (13%) and Liability (2%) as line items on every proposal. Seguro’s documents show no equivalent line at all. Ask Seguro in writing whether markup is already folded into their unit prices — otherwise a double-digit percentage could appear later as a change order.'},
@@ -1011,39 +1011,6 @@ const BID_NOTES = [
    david:'Half of the duplex remodel ($245,000 Enhanced) plus half of the garage allowance ($27,500). The 2537 kitchen is the one with wall removal per the design package.',
    alex:'The same half-and-half split ($245,000 plus $27,500 at Enhanced); Toro gives no 2535-specific price. Unit A kitchen has new cabinetry, pantry, appliance garage and slab backsplash.',
    adu:'$430,000 at Enhanced (Essential $395,000, Premium $475,000) for about 466 SF, or roughly $923 per square foot, covering foundation, retaining wall, stormwater, heat-pump HVAC and water heater. Appliances excluded.'},
-];
-
-// Context from the Gmail threads with each contractor (read Oct 15, 2026).
-const BID_EMAILS = {
-  toa:[
-    'Aug 13: Toa said it would gather subcontractor bids over 4 to 6 weeks and asked when permits were expected. Alex K answered permits by Thanksgiving and a December start.',
-    'Aug 13–14: Toa asked about ten scope questions. Alex K’s answers: ADU kept simple (IKEA-level kitchen and vanities, laminate floors, inexpensive appliances, prefab shower inserts, tile on bathroom floors only); quartz at both kitchens; wall-hung toilets; built-in dining seating; a wood ship ladder to the ADU attic; garages with laminate flooring, drywall, lofted ceilings and a built-in closet.',
-    'Aug 17: Gus asked to measure the back retaining wall because the plans give no actual heights, and asked whether a fence goes on top. Toa’s concrete number rests on a 4 ft CMU wall with a 6 ft fence.',
-    'Aug 24–25: Toa asked whether the ADU gets its own meter. Alex K replied to do whatever is fastest with Edison, noting the property is close to capped out on electrical capacity.',
-    'Oct 9: Proposal sent. Windows A and H are priced as rectangles although the plans show custom shapes; a revised price is coming from the supplier. Alex K said you would respond within a couple of weeks.'],
-  nelson:[
-    'LJ Nelson has been involved since February, when it recommended a surveyor for the topographic survey.',
-    'Sep 23: Melissa met you in person and you shared the updated design. The proposal was handed over on paper and you scanned it Sep 28; the scanned file is named "260917 draft".',
-    'Questions LJ sent the design team on Aug 24 were answered and relayed Sep 11 (per Gmail’s summary): the ADU sewer fall is assumed and needs field verification, the duplex gets two new 200A panels, and the ADU gets a new 100A sub-panel. LJ’s electrical line lists that same panel scope.'],
-  seguro:[
-    'Jun 10: Todd sent a budget range before plans were final and said Seguro pads numbers when finishes are guessed. He urged robust, long-lasting finishes, sound insulation at interior walls and an ERV for fresh air.',
-    'Aug 12–13: Plans sent; Todd asked for the garage elevations. You followed up Aug 25 and Sep 10 before getting numbers.',
-    'Sep 10: Todd wrote that Seguro priced the structure first (concrete, framing, windows, doors, roof), then the finishes, and "unfortunately" could not meet your budget. He offered a hybrid where Seguro builds the shell and you do the finishes, and said continuing the budgets requires starting its PSA consulting agreement. That likely explains why paint, tile and flooring show $0.'],
-  maple:[
-    'Maple Leaf was the last bidder to join: first contact Jun 30, with a first meeting set for about Jul 9.',
-    'Sep 9: Joshua sent the three estimates. Alex K asked why a "garage work" line was identical ($153,147.06) on all three. Joshua replied he had built them from a spreadsheet for an ADU bid from the spring, missed that line, and removed it from all three.',
-    'Joshua also said he had not heard back from many subcontractors, that costs would move a lot, and that shared savings (trash and similar) were not reflected. Treat these numbers as placeholders.'],
-  toro:[
-    'Sep 28: Toro delivered the estimate, calling it a preliminary budgeting tool to compare against your target budget before a more detailed final proposal.',
-    'Sep 29: Alex K said you would review it in a couple of weeks and that revised plans would reach the city with approval in about six weeks. Oct 3: Toro said it would stand by and refine scope and pricing against the updated plan set and final selections.'],
-};
-
-const PROJECT_CONTEXT = [
-  'Timeline given to the bidders: permits by Thanksgiving, construction starting in December. Revised plans were going to the City around Sep 29, with approval expected in about six weeks.',
-  'The plan set is still moving: your architect and interior designer were revising drawings on Sep 15–16 (including a primary closet and a garage-door track conflict), so every bid priced from the 7/30/26 set will need a refresh.',
-  'Electrical: the duplex gets two new 200A panels and the ADU a 100A sub-panel. Edison lead time is long and capacity is tight, so start that request early.',
-  'Duplex finishes the owners described: new flooring only in the kitchens, new and existing baths and the garages (the rest of the hardwood stays); quartz counters; tile backsplash at 2537 and slab backsplash at 2535; wall-hung toilets; built-in dining seating; a disposal reused at 2537 and added at 2535.',
-  'ADU finishes the owners described: keep it simple, "3/10". IKEA kitchen and vanities, laminate floors, inexpensive appliances, plastic shower inserts, tile on bathroom floors only, plus a wood ship ladder to the attic.',
 ];
 
 let estimates = SEED.slice();
@@ -1274,7 +1241,6 @@ function renderBids(){
     return (ia<0?99:ia)-(ib<0?99:ib);
   });
   let html = `<div class="prop-head"><h2>Bid summaries</h2><div class="scope">One card per contractor, written for the two households. David &amp; Erin are 2537, Alex &amp; Jimena are 2535, and the ADU is shared, so each household’s all-in number is its own side plus half the ADU.</div></div>
-    <div class="panel ctxpanel"><h3>What the emails say about the project</h3><div class="hint">From the Gmail threads with the contractors, read Oct 15, 2026. Use it to check that each bid priced what you actually asked for.</div><ul>${PROJECT_CONTEXT.map(x=>`<li>${x}</li>`).join('')}</ul></div>
     <div class="bidcards">`;
   names.forEach((name,ci)=>{
     const ests = estimates.filter(e=>e.contractor===name);
@@ -1299,8 +1265,6 @@ function renderBids(){
     if(note){
       html += `<div class="household"><div><div class="hname">For David &amp; Erin (2537)</div>${note.david}</div><div><div class="hname">For Alex &amp; Jimena (2535)</div>${note.alex}</div><div><div class="hname">For the shared ADU</div>${note.adu}</div></div>`;
       html += `<div class="bidcols"><div class="bidlist good"><h4>In its favor</h4><ul>${note.good.map(x=>`<li>${x}</li>`).join('')}</ul></div><div class="bidlist watch"><h4>Watch for</h4><ul>${note.watch.map(x=>`<li>${x}</li>`).join('')}</ul></div><div class="bidlist ask"><h4>Ask them</h4><ul>${note.ask.map(x=>`<li>${x}</li>`).join('')}</ul></div></div>`;
-      const ek = Object.keys(BID_EMAILS).find(k=>new RegExp(k,'i').test(name));
-      if(ek) html += `<div class="bidlist ctx"><h4>From your emails</h4><ul>${BID_EMAILS[ek].map(x=>`<li>${x}</li>`).join('')}</ul></div>`;
     } else {
       html += `<div class="household">No written summary yet for this contractor. Its numbers appear in every comparison tab.</div>`;
     }
