@@ -181,6 +181,13 @@
   .fill.toa{background:var(--toa);}
   .fill.ljn{background:var(--ljn);}
   .fill.toro{background:var(--toro);}
+  .hidebar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0 0 16px;}
+  .hidebar .hlabel{font-size:11px;text-transform:uppercase;letter-spacing:.06em;font-weight:700;color:var(--faint);margin-right:2px;}
+  button.chip{font-family:inherit;font-size:12.5px;font-weight:700;padding:5px 11px;border-radius:20px;border:2px solid var(--c);background:var(--paper);color:var(--c);cursor:pointer;display:inline-flex;align-items:center;gap:7px;}
+  button.chip .st{font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;opacity:.75;}
+  button.chip.off{border-style:dashed;border-color:var(--line-strong);background:transparent;color:var(--faint);text-decoration:line-through;}
+  button.chip.off .st{text-decoration:none;}
+  .bidcard.setaside{grid-column:1/-1;border-top-color:var(--line-strong);padding:12px 16px;background:var(--bg);box-shadow:none;}
   .filterbar select{font-family:inherit;font-size:12.5px;padding:3px 8px;border:1px solid var(--line-strong);border-radius:6px;background:var(--paper);color:var(--ink);}
   .conf-pill{font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;padding:1px 6px;border-radius:20px;background:var(--good-soft);color:var(--good);white-space:nowrap;}
   .conf-pill.prelim{background:var(--bg);color:var(--faint);border:1px solid var(--line);}
@@ -840,7 +847,7 @@ function buildToro(){
   });
 }
 
-const SEED = NEW_BIDS.concat(buildToro(), SEED_PRELIM.map(e=>Object.assign({conf:'prelim'}, e)));
+const SEED = NEW_BIDS.filter(e=>/nelson/i.test(e.contractor)).concat(buildToro(), NEW_BIDS.filter(e=>/toa/i.test(e.contractor)), SEED_PRELIM.map(e=>Object.assign({conf:'prelim'}, e)));
 
 // ---------------------------------------------------------------------
 // Hand-authored flags (grounded in the numbers above)
@@ -1056,9 +1063,32 @@ function tierSelect(){
   return `<label>Toro tier <select id="toroTier">${TORO_TIERS.map((t,i)=>`<option value="${i}" ${i===toroTier?'selected':''}>${t}</option>`).join('')}</select></label>`;
 }
 
+// Contractors the household has set aside; the finalists are the ones left showing.
+const FINALISTS = ['Toro Construction','LJ Nelson Construction'];
+let hidden = new Set();
+try{ const s = JSON.parse(localStorage.getItem('bidHidden')||'null'); if(Array.isArray(s)) hidden = new Set(s); }catch(e){}
+
+function contractorNames(){
+  const out = [];
+  estimates.forEach(e=>{ if(!out.includes(e.contractor)) out.push(e.contractor); });
+  return out;
+}
+
+async function setHidden(next){
+  hidden = next;
+  try{ localStorage.setItem('bidHidden', JSON.stringify([...hidden])); }catch(e){}
+  if(dbApi){ try{ await dbApi.doc('settings/view').set({hidden:[...hidden]}); }catch(e){} }
+  render();
+}
+
+function hideBar(){
+  const names = contractorNames();
+  return `<div class="hidebar"><span class="hlabel">Compare</span>${names.map((n,i)=>`<button class="chip ${hidden.has(n)?'off':''}" style="--c:var(--${colorFor(n,i)})" data-hide="${esc(n)}" title="${hidden.has(n)?'Click to bring back':'Click to set aside'}">${n.replace(' Construction','')}<span class="st">${hidden.has(n)?'set aside':'shown'}</span></button>`).join('')}<button class="btn" data-hidepreset="finalists">Finalists only (Toro + LJ Nelson)</button><button class="btn" data-hidepreset="all">Show all</button></div>`;
+}
+
 function estimatesFor(prop){
   const base = prop==='all' ? estimates : estimates.filter(e=>e.property===prop);
-  return onlyHigh ? base.filter(e=>e.conf==='high') : base;
+  return base.filter(e=>!hidden.has(e.contractor));
 }
 
 // For the All Properties tab: one combined column per contractor.
@@ -1114,7 +1144,9 @@ function renderPropertyView(propKey){
 
   let html = `<div class="prop-head"><h2>${meta.label}</h2><div class="addr">${meta.addr}</div><div class="scope">${meta.scope}</div></div>`;
 
-  html += `<div class="filterbar"><label><input type="checkbox" id="onlyHigh" ${onlyHigh?'checked':''}> Show only the more accurate bids (Toa, LJ Nelson)</label>${tierSelect()}<span>Seguro, Maple Leaf and Toro are earlier or budget-level estimates.</span></div>`;
+  html += hideBar();
+  if(!hidden.has('Toro Construction')) html += `<div class="filterbar">${tierSelect()}<span>Toro priced three finish tiers; Enhanced is closest to your design intent.</span></div>`;
+  if(!list.length) html += `<div class="disclaimer">Every contractor is set aside. Click a name above or "Show all" to bring bids back.</div>`;
 
   // stat tiles
   const tileCount = list.length + (list.length>=2?1:0) + 1;
@@ -1238,11 +1270,16 @@ function renderBids(){
   const noteFor = n => BID_NOTES.find(b=>b.match.test(n));
   names.sort((a,b)=>{
     const ia = BID_NOTES.findIndex(x=>x.match.test(a)), ib = BID_NOTES.findIndex(x=>x.match.test(b));
-    return (ia<0?99:ia)-(ib<0?99:ib);
+    const fin = x => FINALISTS.includes(x) ? 0 : 1;
+    return (hidden.has(a)-hidden.has(b)) || (fin(a)-fin(b)) || ((ia<0?99:ia)-(ib<0?99:ib));
   });
-  let html = `<div class="prop-head"><h2>Bid summaries</h2><div class="scope">One card per contractor, written for the two households. David &amp; Erin are 2537, Alex &amp; Jimena are 2535, and the ADU is shared, so each household’s all-in number is its own side plus half the ADU.</div></div>
+  let html = `<div class="prop-head"><h2>Bid summaries</h2><div class="scope">One card per contractor, written for the two households. David &amp; Erin are 2537, Alex &amp; Jimena are 2535, and the ADU is shared, so each household’s all-in number is its own side plus half the ADU.</div></div>${hideBar()}
     <div class="bidcards">`;
   names.forEach((name,ci)=>{
+    if(hidden.has(name)){
+      html += `<div class="bidcard setaside"><div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap"><div><b style="color:var(--faint)">${name}</b> <span class="conf-pill prelim">Set aside</span></div><button class="btn" data-hide="${esc(name)}">Bring back</button></div></div>`;
+      return;
+    }
     const ests = estimates.filter(e=>e.contractor===name);
     const note = noteFor(name);
     const col = colorFor(name, ci);
@@ -1389,8 +1426,21 @@ async function clearAnnotation(iid){
 }
 
 function wireCategoryTable(){
-  const oh = document.getElementById('onlyHigh');
-  if(oh) oh.addEventListener('change', ()=>{ onlyHigh = oh.checked; openFlagForm = null; render(); });
+  document.querySelectorAll('[data-hide]').forEach(b=>{
+    b.addEventListener('click', ()=>{
+      const n = b.dataset.hide; const next = new Set(hidden);
+      if(next.has(n)) next.delete(n); else next.add(n);
+      openFlagForm = null; setHidden(next);
+    });
+  });
+  document.querySelectorAll('[data-hidepreset]').forEach(b=>{
+    b.addEventListener('click', ()=>{
+      const next = b.dataset.hidepreset==='finalists'
+        ? new Set(contractorNames().filter(n=>!FINALISTS.includes(n)))
+        : new Set();
+      openFlagForm = null; setHidden(next);
+    });
+  });
   const tt = document.getElementById('toroTier');
   if(tt) tt.addEventListener('change', ()=>{ applyToroTier(Number(tt.value)); render(); });
   document.querySelectorAll('button.expandbtn').forEach(b=>{
@@ -1463,6 +1513,12 @@ async function boot(){
           estimates = SEED.concat(added);
           render();
         }, ()=>{ /* fall back silently to seed + local additions */ });
+        dbApi.doc('settings/view').onSnapshot(snap=>{
+          if(snap.exists){
+            const d = snap.data();
+            if(d && Array.isArray(d.hidden)){ hidden = new Set(d.hidden); render(); }
+          }
+        }, ()=>{ /* keep the local choice */ });
         dbApi.collection('annotations').onSnapshot(snap=>{
           const next = {};
           snap.docs.forEach(d=>{ const data = d.data(); if(data && data.iid) next[data.iid] = data; });
