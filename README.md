@@ -1,6 +1,6 @@
 # GC Bid Review
 
-Source code for the Treasure Dr renovation bid-comparison tool (kitchen/bath/garage remodel on both duplex sides plus the new backyard ADU, Santa Barbara CA).
+Source code for the ******** Dr renovation bid-comparison tool (kitchen/bath/garage remodel on both duplex sides plus the new backyard ADU, Santa Barbara CA).
 
 **This repo is a code snapshot, not the live tool.** `index.html` is a static file — opening it locally or via GitHub Pages will show the comparison data, but flags and newly added estimates won't save or sync between people, because that requires the shared live database the file connects to when run as a Claude Artifact.
 
