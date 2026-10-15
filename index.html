@@ -29,6 +29,8 @@
     --toa-soft:#d6f0e0;
     --ljn:#a02ec0;
     --ljn-soft:#f1dbf6;
+    --toro:#0b8fa8;
+    --toro-soft:#d4eef3;
     --shadow: 0 1px 2px rgba(28,36,48,0.06), 0 6px 20px -8px rgba(28,36,48,0.12);
   }
   @media (prefers-color-scheme: dark){
@@ -57,6 +59,8 @@
       --toa-soft:#15301f;
       --ljn:#dd8cf2;
       --ljn-soft:#2e1d37;
+      --toro:#3cc9e0;
+      --toro-soft:#14323a;
       --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 8px 24px -8px rgba(0,0,0,0.5);
     }
   }
@@ -85,6 +89,8 @@
       --toa-soft:#15301f;
       --ljn:#dd8cf2;
       --ljn-soft:#2e1d37;
+      --toro:#3cc9e0;
+      --toro-soft:#14323a;
     --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 8px 24px -8px rgba(0,0,0,0.5);
   }
 
@@ -174,6 +180,8 @@
   .fill.mapleleaf{background:var(--mapleleaf);}
   .fill.toa{background:var(--toa);}
   .fill.ljn{background:var(--ljn);}
+  .fill.toro{background:var(--toro);}
+  .filterbar select{font-family:inherit;font-size:12.5px;padding:3px 8px;border:1px solid var(--line-strong);border-radius:6px;background:var(--paper);color:var(--ink);}
   .conf-pill{font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;padding:1px 6px;border-radius:20px;background:var(--good-soft);color:var(--good);white-space:nowrap;}
   .conf-pill.prelim{background:var(--bg);color:var(--faint);border:1px solid var(--line);}
   .filterbar{display:flex;align-items:center;gap:10px;font-size:12.5px;color:var(--muted);margin:0 0 16px;flex-wrap:wrap;}
@@ -319,7 +327,7 @@
   <div id="views"></div>
 
   <footer>
-    Figures are transcribed from the proposals supplied by Toa Construction (Lic. 971342, Oct 9, 2026), LJ Nelson Construction (Sept 23, 2026), Seguro Construction (Lic. 909481) and Maple Leaf Construction (CLN 960826), the last two dated Sept 9–10, 2026. Toa and LJ Nelson quoted the whole project in one document, so their lines are split across 2537, 2535 and the ADU: lines the bid names for one unit go to that unit, combined duplex lines are divided evenly, and whole-project lines are spread pro rata by direct cost. Santa Barbara market ranges in the Benchmarks tab are general industry guidance, not quotes — confirm against 2–3 current local bids before relying on them for negotiation. Click ▸ on any category row to see its individual line items and flag one with 🚩 — flags and added estimates are stored with this page and visible to everyone who opens the link.
+    Figures are transcribed from the proposals supplied by Toa Construction (Lic. 971342, Oct 9, 2026), LJ Nelson Construction (Sept 23, 2026), Toro Construction (Lic. 838484, Sept 28, 2026, three finish tiers), Seguro Construction (Lic. 909481) and Maple Leaf Construction (CLN 960826), the last two dated Sept 9–10, 2026. Toa and LJ Nelson quoted the whole project in one document, so their lines are split across 2537, 2535 and the ADU: lines the bid names for one unit go to that unit, combined duplex lines are divided evenly, and whole-project lines are spread pro rata by direct cost. Santa Barbara market ranges in the Benchmarks tab are general industry guidance, not quotes — confirm against 2–3 current local bids before relying on them for negotiation. Click ▸ on any category row to see its individual line items and flag one with 🚩 — flags and added estimates are stored with this page and visible to everyone who opens the link.
   </footer>
 </div>
 
@@ -351,6 +359,8 @@ const CATS = [
   {key:'pm',          label:'Project Management',           code:'40000'},
   {key:'ohp',         label:'Overhead, Profit &amp; Liability', code:'—'},
   {key:'tax',         label:'Sales Tax',                    code:'—'},
+  {key:'garage',      label:'Garage Allowance',             code:'—'},
+  {key:'lump',        label:'Lump Sum (no trade breakdown)', code:'—'},
 ];
 const CATMAP = Object.fromEntries(CATS.map(c=>[c.key,c]));
 
@@ -796,7 +806,34 @@ const NEW_BIDS = [].concat(
 );
 // END-BIDS
 
-const SEED = NEW_BIDS.concat(SEED_PRELIM.map(e=>Object.assign({conf:'prelim'}, e)));
+// Toro priced three lump sums in three finish tiers, with no trade breakdown.
+const TORO_TIERS = ['Essential','Enhanced','Premium'];
+const TORO_LINES = [
+  ['lump','New ADU + site, foundation and retaining wall (about 466 SF gross)',[395000,430000,475000],'adu'],
+  ['lump','Duplex remodel, both units (2 kitchens, 4 bathrooms, laundry, skylights, 2 electrical upgrades, 2 tankless heaters)',[445000,490000,545000],'duplex'],
+  ['garage','Garage work, preliminary allowance (same in all tiers)',[55000,55000,55000],'duplex'],
+];
+const TORO_NOTES = {
+  '2537':'Budget-level estimate addressed to David Burke at 2537. Unit B (2537) kitchen includes wall removal from the interior design package. Prices are split in half from combined duplex lines.',
+  '2535':'No 2535-specific price: the duplex remodel and garage allowance are combined, so this side is half of each. Unit A (2535) kitchen has new cabinetry, pantry, appliance garage and slab backsplash.',
+  'adu':'About 466 SF gross. Includes foundation, retaining wall, stormwater and rain barrels, heat-pump HVAC and water heater; appliances are excluded. Essential $395,000, Enhanced $430,000, Premium $475,000.'};
+function buildToro(){
+  return PROPS3.map(p=>{
+    const id = 'seed-toro-'+p;
+    const items = [];
+    TORO_LINES.forEach(l=>{
+      const [cat,label,tiers,to] = l;
+      if(to==='adu' && p!=='adu') return;
+      if(to==='duplex' && p==='adu') return;
+      const t = to==='duplex' ? tiers.map(x=>x/2) : tiers;
+      items.push({iid:id+'#'+items.length, cat, label:label+(to==='duplex'?' (½ duplex)':''), amt:t[1], tiers:t});
+    });
+    return {id, property:p, source:'seed', conf:'budget', contractor:'Toro Construction',
+      contact:'GC Lic. 838484 · (805) 452-4047 · toroconstructionsb.com', date:'2026-09-28', expires:'2026-10-13', items, note:TORO_NOTES[p]};
+  });
+}
+
+const SEED = NEW_BIDS.concat(buildToro(), SEED_PRELIM.map(e=>Object.assign({conf:'prelim'}, e)));
 
 // ---------------------------------------------------------------------
 // Hand-authored flags (grounded in the numbers above)
@@ -804,8 +841,10 @@ const SEED = NEW_BIDS.concat(SEED_PRELIM.map(e=>Object.assign({conf:'prelim'}, e
 const FLAGS = {
   all: [
     {sev:'info', title:'Toa and LJ Nelson are treated as the more accurate bids', body:'Whole-project totals: <b>Toa $926,693.14</b> (before permits and the unselected options, e.g. +$13,000 to raise both garage floors) and <b>LJ Nelson $808,666.33</b> (includes $5,408.08 sales tax; its cover letter still calls it a "preliminary, ballpark figure"). Seguro and Maple Leaf were earlier budgets, so the older flags below that compare only those two should be read with that in mind. Use the checkbox above to hide them.'},
+    {sev:'info', title:'Toro is a three-tier budget estimate, not an itemized bid', body:'Toro Construction (dated Sept 28, price expired Oct 13): <b>$895,000</b> Essential, <b>$975,000</b> Enhanced, <b>$1,075,000</b> Premium, each including a $55,000 garage allowance and excluding permits and appliances. Core construction is identical across tiers, so the spread is purely finishes; use the Toro tier menu above to switch. Enhanced is about $48,000 above Toa and $166,000 above LJ Nelson, but Toro’s lump sums can’t be matched to trades, so treat it as a check on the total rather than a line-by-line comparison.'},
+    {sev:'warn', title:'Skylight counts differ across bids', body:'Seguro prices 3, Toro 4 (final quantity still to be confirmed), and Toa and LJ Nelson price 6. Check the plan set; each skylight adds supply, framing, flashing and roofing work.'},
     {sev:'crit', title:'Electrical: the newer bids put all three buildings at $33k–$62k, not $96k', body:'Toa: <b>$62,205.69</b> for everything, including a new 200A panel with three meters and the ADU sub-panel. LJ Nelson: <b>$32,500</b> for everything. Maple Leaf charges $31,970 on each of its three proposals (<b>$95,910</b> total) and Seguro totals <b>$83,853.10</b>. LJ’s whole-project number is roughly what Maple Leaf charges for a single building, which supports the earlier read that Maple Leaf’s electrical was repeated three times.'},
-    {sev:'crit', title:'Whether the duplex gets a new roof differs by bid', body:'Toa prices roofing at the <b>ADU only</b> ($12,420) and says it includes no roof scope at the duplex. Seguro prices a new roof on each duplex side ($15,720 each) plus the ADU, Maple Leaf prices half a roof per side, and LJ Nelson has one $23,750 line for "ADU and duplex". Decide the duplex roof scope first or these totals can’t be compared.'},
+    {sev:'crit', title:'Whether the duplex gets a new roof differs by bid', body:'Toa prices roofing at the <b>ADU only</b> ($12,420) and says it includes no roof scope at the duplex. Seguro prices a new roof on each duplex side ($15,720 each) plus the ADU, Maple Leaf prices half a roof per side, and LJ Nelson has one $23,750 line for "ADU and duplex". Toro carries only skylight-related roof repairs on the duplex. Decide the duplex roof scope first or these totals can’t be compared.'},
     {sev:'warn', title:'Garage floor raise is missing from both newer bids', body:'Toa leaves it out and offers it as Option FR1 (<b>+$13,000</b> for both garages). LJ Nelson has no line for it. Seguro includes raising the garage floor inside its framing line and Maple Leaf has a $10,000 leveling slab per side, so add roughly $13k–$20k to Toa and LJ for a like-for-like comparison.'},
     {sev:'warn', title:'Cabinetry is priced three different ways', body:'Toa: <b>$106,736.96</b> for both kitchens plus bathroom storage (frameless plywood boxes, $94,736.96 supply + $12,000 install). LJ Nelson: <b>$49,800</b>, but its two lines are "paint grade" ($23,600) and "partial stain" ($26,200) and may be alternatives rather than one per kitchen — if so the real figure is about half. Maple Leaf: $77,000 across both sides including vanities. Ask each for the same spec.'},
     {sev:'warn', title:'LJ Nelson counts some items twice', body:'Duplex bathroom accessories appear under Plumbing ($1,600) and again under Carpentry ($1,275 install + $1,575 materials). ADU door and window installation appears at 22.1 ($5,000) and again at 22.9 ($4,250 "incl. trim"). ADU vanity installation is $6,000 against $1,300 of materials (Toa installs the same two vanities for $900). Flag them with 🚩 once you’ve confirmed with LJ Nelson.'},
@@ -818,7 +857,7 @@ const FLAGS = {
     {sev:'info', title:'No separate Overhead &amp; Profit line from Seguro', body:'Maple Leaf explicitly breaks out Overhead &amp; Profit (13%) and Liability (2%) as line items on every proposal. Seguro’s documents show no equivalent line at all. Ask Seguro in writing whether markup is already folded into their unit prices — otherwise a double-digit percentage could appear later as a change order.'},
   ],
   '2537': [
-    {sev:'info', title:'The pony wall / beam work appears only in Seguro’s 2537 bid', body:'Neither Toa nor LJ Nelson has a line for removing the pony wall or adding a beam, which matches it being out of scope. Seguro’s $22,112.80 "Kitchen + Living Room Integration" line is still counted in its 2537 total — expand Framing & Carpentry and flag it as excluded to see the adjusted number.'},
+    {sev:'info', title:'The pony wall / beam work appears only in Seguro’s 2537 bid', body:'Neither Toa nor LJ Nelson has a line for removing the pony wall or adding a beam, which matches it being out of scope. Toro’s 2537 kitchen scope does mention wall removal from the interior design package, so confirm that is not the same wall. Seguro’s $22,112.80 "Kitchen + Living Room Integration" line is still counted in its 2537 total — expand Framing & Carpentry and flag it as excluded to see the adjusted number.'},
     {sev:'info', title:'Toa and LJ Nelson split this side’s costs differently', body:'Toa prices 2537’s cabinets at $43,948 and kitchen countertops at $9,667.48 with tile backsplash priced elsewhere. LJ Nelson prices 2537’s countertops at $6,175 and its backsplash tile separately at $9,087.50. Both newer bids price one new garage window at 2537 (Window K).'},
     {sev:'warn', title:'Electrical: Maple Leaf runs 83% above Seguro', body:'Maple Leaf: <b>$31,970</b> vs Seguro: <b>$17,475.40</b> for the same panel upgrade + kitchen/bath/garage lighting scope. Combined with the portfolio-wide flag that Maple Leaf’s $31,970 repeats verbatim across all three of its bids, this number is the one most worth re-quoting from a third electrician before signing either contract.'},
     {sev:'info', title:'Cabinetry cost is bundled, not broken out, in Seguro’s bid', body:'Seguro folds "purchase and install new kitchen cabinets" and "purchase and install new bathroom vanity" into its $38,330.60 Framing & Carpentry line without a separate dollar figure, while Maple Leaf itemizes cabinetry + vanities + countertops at $48,500. Ask Seguro for the cabinet/vanity portion specifically so the two bids can be compared trade-for-trade.'},
@@ -832,6 +871,7 @@ const FLAGS = {
     {sev:'info', title:'Unpriced scope inflates the apples-to-apples gap', body:'Seguro’s $175,936.28 total also omits Painting, Tile, and Flooring. Adding Maple Leaf’s pricing for those trades (~$71,540) brings an adjusted Seguro estimate to roughly <b>$247,500</b> against Maple Leaf’s <b>$322,692.76</b>.'},
   ],
   adu: [
+    {sev:'info', title:'Cost per square foot: four of five ADU bids land near $925 to $975', body:'Toro states the ADU is about 466 SF gross, so its Enhanced price of $430,000 is about <b>$923/sf</b> (Essential $848, Premium $1,019). On the same area Toa is about $959/sf, LJ Nelson $939, Seguro $974 and Maple Leaf $1,427. Toa’s and LJ Nelson’s figures include a share of project-wide costs. All sit above the $450–$700+/sf range on the Benchmarks tab, probably because a 466 SF unit carries a retaining wall, deep foundation and utility connections over very little floor area.'},
     {sev:'crit', title:'The two newer bids agree on site and foundation work, and bracket the older ones', body:'Toa: Concrete <b>$133,400</b> + trenching <b>$3,000</b> = <b>$136,400</b>. LJ Nelson: Concrete/Hardscape <b>$100,000</b> + Site Work <b>$32,368.75</b> = <b>$132,368.75</b>. That is about 3% apart, against Seguro at $55,020 (likely too low) and Maple Leaf at $178,000 (likely too high). Toa’s trenching is only a $3,000 allowance and excludes backfill, compaction and saw-cutting, while LJ includes $8,500 of trenching plus $8,225 of backfill.'},
     {sev:'warn', title:'ADU framing: LJ Nelson is far below Toa', body:'Toa: <b>$59,775</b> ($21,275 materials + $38,500 labor). LJ Nelson: <b>$24,258.75</b> ($12,500 materials + $11,758.75 labor). Seguro $44,802 and Maple Leaf $30,000. LJ’s labor is under a third of Toa’s, so its framing is the likeliest place for a later change order.'},
     {sev:'warn', title:'HVAC and roof scopes don’t line up', body:'Toa prices one 24,000 BTU wall-mount unit ($14,375 allowance) while LJ Nelson, Seguro and Maple Leaf price a condenser with two mini splits ($17,875, $22,204.50, $34,780). For the roof, Toa includes ADU shingles, gutters and fascia ($15,757.25) while LJ’s $23,750 roof line covers ADU and duplex together and its rain barrels add $7,406.'},
@@ -925,7 +965,7 @@ const BID_NOTES = [
    alex:'Includes the outdoor shower (about $17,000 across plumbing and condenser relocation) that no other bid prices. No tile, paint or flooring yet.',
    adu:'Two mini splits at $22,204.50 and electrical at $48,902, with cabinetry, glazing, hardware, paint, tile and appliances all $0.'},
   {match:/maple/i,
-   headline:'Prices every trade and shows overhead, profit and liability openly, but the numbers read like templates: identical proposals for 2537 and 2535, the same $31,970 electrical on all three, and the highest total of the four bids.',
+   headline:'Prices every trade and shows overhead, profit and liability openly, but the numbers read like templates: identical proposals for 2537 and 2535, the same $31,970 electrical on all three, and the highest total of the five bids.',
    good:[
      'Only early bid with every trade priced and markup (13% overhead and profit, 2% liability) shown.',
      'Clear structure that is easy to compare line by line.'],
@@ -941,7 +981,29 @@ const BID_NOTES = [
      'Was a second site walk done at 2535, and is the gutter charge really three separate runs?'],
    david:'$322,693, of which $42,090 is overhead, profit and liability. Kitchen cabinets, vanities and countertops total $48,500.',
    alex:'Identical to 2537 at $322,693, so nothing here reflects the outdoor shower or any 2535-specific work.',
-   adu:'$665,041, of which $86,744 is overhead, profit and liability. The highest ADU number of the four.'},
+   adu:'$665,041, of which $86,744 is overhead, profit and liability. The highest ADU number of the five.'},
+  {match:/toro/i,
+   headline:'A budget-level estimate, not an itemized bid: three lump sums (ADU, duplex, garage) in three finish tiers, with no trade breakdown, so it cannot be compared line by line. Toro calls the Enhanced tier closest to your design intent. Dated 9/28 and the price expired 10/13, so ask for a refresh.',
+   good:[
+     'Scope is tied to the current plan set and interior design package, and core construction is the same in every tier; only finishes change.',
+     'The only bid that states the ADU size (about 466 SF gross), which gives a real cost per square foot.',
+     'Includes things others leave out or leave vague: geotechnical observation, stormwater and rain barrels, both 100A to 200A service upgrades and two tankless heaters.',
+     'Lists a GC license number (838484) you can verify at cslb.ca.gov.'],
+   watch:[
+     'No trade breakdown, so it cannot confirm or challenge electrical, plumbing, roofing or cabinet numbers from the other bids.',
+     'The price expired 10/13/26, and this is explicitly not a contract or request for signature.',
+     'Excludes permits, plan-check, impact and utility fees, architect and engineering fees, and all appliances.',
+     'The $55,000 garage allowance is a placeholder until final garage elevations and selections exist, and it does not say whether it covers one garage or both.',
+     'Carries four skylights while Toa and LJ Nelson price six and Seguro three; the final count is still open.',
+     'The 2537 kitchen scope includes wall removal from the interior design package. Check whether that is the pony wall you took out of scope.'],
+   ask:[
+     'Please refresh the price and say how long it will hold.',
+     'Can you break each lump sum into trades (site, concrete, framing, electrical, plumbing, roofing, finishes)?',
+     'Is the garage allowance for one garage or both, and what does it cover?',
+     'What is included in the 2537 kitchen wall removal, and is a new roof on the duplex included?'],
+   david:'Half of the duplex remodel ($245,000 Enhanced) plus half of the garage allowance ($27,500). The 2537 kitchen is the one with wall removal per the design package.',
+   alex:'The same half-and-half split ($245,000 plus $27,500 at Enhanced); Toro gives no 2535-specific price. Unit A kitchen has new cabinetry, pantry, appliance garage and slab backsplash.',
+   adu:'$430,000 at Enhanced (Essential $395,000, Premium $475,000) for about 466 SF, or roughly $923 per square foot, covering foundation, retaining wall, stormwater, heat-pump HVAC and water heater. Appliances excluded.'},
 ];
 
 let estimates = SEED.slice();
@@ -950,7 +1012,7 @@ let expanded = {};      // "propKey|catKey" -> true when a category row is expan
 let openFlagForm = null; // iid currently showing its inline flag editor
 let dbApi = null;
 let activeTab = 'all';
-let aduSqft = null;
+let aduSqft = 466;
 
 const fmt = n => '$' + Math.round(n).toLocaleString('en-US');
 const fmt2 = n => '$' + n.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2});
@@ -977,6 +1039,15 @@ function isUnpriced(est, catKey){
 }
 
 let onlyHigh = false;
+let toroTier = 1;
+
+function applyToroTier(i){
+  toroTier = i;
+  estimates.forEach(e=>e.items.forEach(it=>{ if(it.tiers) it.amt = it.tiers[i]; }));
+}
+function tierSelect(){
+  return `<label>Toro tier <select id="toroTier">${TORO_TIERS.map((t,i)=>`<option value="${i}" ${i===toroTier?'selected':''}>${t}</option>`).join('')}</select></label>`;
+}
 
 function estimatesFor(prop){
   const base = prop==='all' ? estimates : estimates.filter(e=>e.property===prop);
@@ -995,7 +1066,7 @@ function combinedFor(list){
 }
 
 function confPill(e){
-  return e.conf==='high' ? '<span class="conf-pill">More accurate</span>' : (e.conf==='prelim' ? '<span class="conf-pill prelim">Early budget</span>' : '');
+  return e.conf==='high' ? '<span class="conf-pill">More accurate</span>' : (e.conf==='prelim' ? '<span class="conf-pill prelim">Early budget</span>' : (e.conf==='budget' ? '<span class="conf-pill prelim">Budget estimate</span>' : ''));
 }
 
 function contractorsIn(list){
@@ -1009,6 +1080,7 @@ function colorFor(contractor, idx){
   if(/maple/i.test(contractor)) return 'mapleleaf';
   if(/toa/i.test(contractor)) return 'toa';
   if(/nelson/i.test(contractor)) return 'ljn';
+  if(/toro/i.test(contractor)) return 'toro';
   return idx%2===0 ? 'seguro' : 'mapleleaf';
 }
 
@@ -1035,7 +1107,7 @@ function renderPropertyView(propKey){
 
   let html = `<div class="prop-head"><h2>${meta.label}</h2><div class="addr">${meta.addr}</div><div class="scope">${meta.scope}</div></div>`;
 
-  html += `<div class="filterbar"><label><input type="checkbox" id="onlyHigh" ${onlyHigh?'checked':''}> Show only the more accurate bids (Toa, LJ Nelson)</label><span>Seguro and Maple Leaf were earlier, rougher budgets.</span></div>`;
+  html += `<div class="filterbar"><label><input type="checkbox" id="onlyHigh" ${onlyHigh?'checked':''}> Show only the more accurate bids (Toa, LJ Nelson)</label>${tierSelect()}<span>Seguro, Maple Leaf and Toro are earlier or budget-level estimates.</span></div>`;
 
   // stat tiles
   const tileCount = list.length + (list.length>=2?1:0) + 1;
@@ -1059,8 +1131,8 @@ function renderPropertyView(propKey){
     html += `<div class="sqft-box">
       <span>ADU conditioned area:</span>
       <input type="number" id="sqftInput" placeholder="e.g. 750" value="${aduSqft||''}" min="0" step="1">
-      <span>sq ft</span>
-      <span class="out" id="sqftOut">${aduSqft ? list.map(e=>`${e.contractor.split(' ')[0]}: <b>${'$'+Math.round(totalAdjusted(e)/aduSqft)}</b>/sqft`).join(' &nbsp;·&nbsp; ') : 'enter square footage from the ADU plans to compare cost-per-square-foot across bids'}</span>
+      <span>sq ft</span><span style="color:var(--faint);font-size:11.5px">Toro states about 466 SF gross; confirm from the plans.</span>
+      <span class="out" id="sqftOut">${aduSqft ? list.map(e=>`${e.contractor.split(' ')[0]==='LJ'?'LJ Nelson':e.contractor.split(' ')[0]}: <b>${'$'+Math.round(totalAdjusted(e)/aduSqft)}</b>/sqft`).join(' &nbsp;·&nbsp; ') : 'enter square footage from the ADU plans to compare cost-per-square-foot across bids'}</span>
     </div>`;
   }
 
@@ -1172,7 +1244,8 @@ function renderBids(){
     const whole = Object.values(t).reduce((a,b)=>a+b,0);
     const aduHalf = (t.adu||0)/2;
     const first = ests[0];
-    html += `<div class="bidcard" style="border-top-color:var(--${col})"><div><h3 style="color:var(--${col})">${name} ${confPill(first)}</h3><div class="contact">${first.contact||''} · dated ${first.date}</div></div>`;
+    html += `<div class="bidcard" style="border-top-color:var(--${col})"><div><h3 style="color:var(--${col})">${name} ${confPill(first)}</h3><div class="contact">${first.contact||''} · dated ${first.date}${first.expires?(new Date(first.expires+'T23:59:59')<new Date()?' · <b style="color:var(--crit)">price expired '+first.expires+'</b>':' · valid through '+first.expires):''}</div></div>`;
+    if(first.items.some(it=>it.tiers)) html += `<div class="filterbar" style="margin:0">${tierSelect()}<span>Showing ${TORO_TIERS[toroTier]}; Toro calls Enhanced the closest to your design intent.</span></div>`;
     if(note) html += `<div class="headline">${note.headline}</div>`;
     html += `<table class="bidtotals"><thead><tr><th></th><th>Total</th></tr></thead><tbody>
       <tr><td>2537 Treasure Dr (David &amp; Erin)</td><td>${have('2537')?fmt(t['2537']):'—'}</td></tr>
@@ -1310,6 +1383,8 @@ async function clearAnnotation(iid){
 function wireCategoryTable(){
   const oh = document.getElementById('onlyHigh');
   if(oh) oh.addEventListener('change', ()=>{ onlyHigh = oh.checked; openFlagForm = null; render(); });
+  const tt = document.getElementById('toroTier');
+  if(tt) tt.addEventListener('change', ()=>{ applyToroTier(Number(tt.value)); render(); });
   document.querySelectorAll('button.expandbtn').forEach(b=>{
     b.addEventListener('click', ()=>{
       const k = b.dataset.expkey;
